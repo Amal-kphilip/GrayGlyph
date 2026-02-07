@@ -595,6 +595,28 @@ button:active {
   padding-bottom: 28px;
 }
 
+.seo-section h2 {
+  margin: 0 0 10px;
+  font-size: 1.25rem;
+}
+
+.seo-section p {
+  margin: 0 0 12px;
+  color: var(--ink-soft);
+  line-height: 1.7;
+}
+
+.seo-section h3 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+}
+
+.seo-section ul {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--ink-soft);
+}
+
 @keyframes rise {
   from {
     opacity: 0;
