@@ -1,0 +1,107 @@
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Sora:wght@300;400;500;600&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Sora", sans-serif;
+  color: #12151c;
+  background:
+    radial-gradient(circle at 15% 15%, rgba(213, 108, 79, 0.4), transparent 50%),
+    radial-gradient(circle at 85% 10%, rgba(60, 125, 108, 0.32), transparent 45%),
+    linear-gradient(180deg, #f9f6f0, #f1f4f7);
+}
+
+@layer components {
+  .glass-panel {
+    @apply rounded-3xl border border-black/10 bg-white/75 shadow-glass backdrop-blur-lg;
+  }
+
+  .glass-soft-panel {
+    @apply rounded-2xl border border-black/10 bg-white/70 shadow-glass backdrop-blur-lg;
+  }
+
+  .btn-primary {
+    @apply rounded-2xl bg-gradient-to-r from-accent to-accent-dark px-4 py-2.5 font-medium text-white shadow-cta transition hover:shadow-[0_16px_30px_rgba(213,108,79,0.3)];
+  }
+
+  .btn-ghost {
+    @apply rounded-2xl border border-black/20 bg-transparent px-3.5 py-2 text-sm text-ink-soft transition hover:border-black/25;
+  }
+
+  .canvas-frame {
+    @apply rounded-2xl border border-black/10 bg-[#fdfcf9];
+  }
+
+  .range-input {
+    @apply w-full;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+  }
+
+  .range-input::-webkit-slider-runnable-track {
+    height: 0.5rem;
+    border-radius: 999px;
+    background: rgba(18, 21, 28, 0.12);
+  }
+
+  .range-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 1.25rem;
+    width: 1.25rem;
+    margin-top: -0.375rem;
+    border-radius: 999px;
+    border: 2px solid #0c4fc2;
+    background: #1672f3;
+    box-shadow: 0 2px 8px rgba(12, 79, 194, 0.35);
+  }
+
+  .range-input::-moz-range-track {
+    height: 0.5rem;
+    border-radius: 999px;
+    background: rgba(18, 21, 28, 0.12);
+  }
+
+  .range-input::-moz-range-thumb {
+    height: 1.25rem;
+    width: 1.25rem;
+    border-radius: 999px;
+    border: 2px solid #0c4fc2;
+    background: #1672f3;
+    box-shadow: 0 2px 8px rgba(12, 79, 194, 0.35);
+  }
+
+  .animate-rise {
+    animation: rise 0.75s ease both;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise {
+    animation: none;
+  }
+}

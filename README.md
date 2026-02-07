@@ -1,29 +1,39 @@
-# GrayGlyph
-Premium grayscale conversion studio in the browser with full‑resolution processing, real‑time preview, and lossless export.
+# GrayGlyph (Next.js + React + Tailwind)
 
-## Highlights
-- Full‑resolution grayscale conversion and PNG export.
-- Live before/after split with dynamic labels.
+GrayGlyph is now built with Next.js, React, and Tailwind CSS for a smoother, responsive UI while preserving full-resolution grayscale processing in the browser.
+
+## Stack
+- Next.js (App Router)
+- React
+- Tailwind CSS
+- Canvas API (client-side image processing)
+
+## Features
+- Full-resolution grayscale conversion and export.
+- Live before/after split preview with labels.
 - Adjustable intensity, contrast, brightness, and film grain.
-- Luminance‑weighted conversion (Rec. 709) toggle.
-- Curated presets for fast looks.
-- Drag‑and‑drop upload + sample image.
+- Luminance-weighted conversion toggle (Rec. 709).
+- Mobile-first responsive layout with adaptive preview sizing.
+- Drag-and-drop upload and sample image loader.
 
-## Live Site
-https://grayglyph.netlify.app/
+## Getting Started
+1. Install dependencies:
+   `npm install`
+2. Start development server:
+   `npm run dev`
+3. Open:
+   `http://localhost:3000`
 
-## Quick Start
-1. Open `index.html` in a browser.
-2. Drop a photo or click to upload.
-3. Tune the sliders and presets.
-4. Download a full‑quality PNG.
+## Build
+- Production build: `npm run build`
+- Start production server: `npm run start`
 
 ## Project Structure
-- `index.html` – layout and UI.
-- `styles.css` – visual design and layout.
-- `app.js` – grayscale processing and interactions.
-- `assets/sample-image.jpg` – default sample image.
+- `app/layout.js` - metadata and root layout.
+- `app/page.js` - React UI + canvas processing logic.
+- `app/globals.css` - Tailwind layers and custom styling.
+- `public/assets/` - logo and sample image.
 
 ## Notes
-- Processing happens at the original image resolution; the preview is scaled for performance.
-- Export always uses the full‑resolution grayscale output.
+- Processing happens locally in-browser; no server upload is required.
+- Export uses the processed full-resolution output.
