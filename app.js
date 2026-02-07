@@ -37,16 +37,20 @@ const fullOutputCanvas = document.createElement("canvas");
 const fullCtx = fullCanvas.getContext("2d");
 const fullOutputCtx = fullOutputCanvas.getContext("2d");
 
-const PREVIEW_WIDTH = 960;
-const PREVIEW_HEIGHT = 540;
+const DESKTOP_PREVIEW_WIDTH = 960;
+const DESKTOP_PREVIEW_HEIGHT = 540;
+const MOBILE_PREVIEW_MAX_EDGE = 960;
+const MOBILE_MIN_PREVIEW_ASPECT = 3 / 4;
+const MOBILE_MAX_PREVIEW_ASPECT = 16 / 9;
+const MOBILE_BREAKPOINT = 820;
 
 const state = {
   image: null,
   filename: "grayscale.png",
   mime: "image/png",
   extension: "png",
-  previewWidth: PREVIEW_WIDTH,
-  previewHeight: PREVIEW_HEIGHT,
+  previewWidth: DESKTOP_PREVIEW_WIDTH,
+  previewHeight: DESKTOP_PREVIEW_HEIGHT,
   originalWidth: 0,
   originalHeight: 0,
   hasUpload: false
@@ -98,6 +102,37 @@ function setPreviewSize(width, height) {
   });
   state.previewWidth = width;
   state.previewHeight = height;
+}
+
+function isMobileViewport() {
+  return window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`).matches;
+}
+
+function getPreviewSize(imageWidth, imageHeight) {
+  if (!isMobileViewport()) {
+    return {
+      width: DESKTOP_PREVIEW_WIDTH,
+      height: DESKTOP_PREVIEW_HEIGHT
+    };
+  }
+
+  const safeAspect = clamp(
+    imageWidth / imageHeight,
+    MOBILE_MIN_PREVIEW_ASPECT,
+    MOBILE_MAX_PREVIEW_ASPECT
+  );
+
+  if (safeAspect >= 1) {
+    return {
+      width: MOBILE_PREVIEW_MAX_EDGE,
+      height: Math.round(MOBILE_PREVIEW_MAX_EDGE / safeAspect)
+    };
+  }
+
+  return {
+    width: Math.round(MOBILE_PREVIEW_MAX_EDGE * safeAspect),
+    height: MOBILE_PREVIEW_MAX_EDGE
+  };
 }
 
 function setFullSize(width, height) {
@@ -302,7 +337,8 @@ function useImage(img, filename, labelPrefix, mimeType) {
   fullCtx.clearRect(0, 0, state.originalWidth, state.originalHeight);
   fullCtx.drawImage(img, 0, 0, state.originalWidth, state.originalHeight);
 
-  setPreviewSize(PREVIEW_WIDTH, PREVIEW_HEIGHT);
+  const preview = getPreviewSize(img.width, img.height);
+  setPreviewSize(preview.width, preview.height);
 
   render();
   fileMeta.textContent = `${labelPrefix} - ${img.width} x ${img.height}px`;
@@ -436,6 +472,24 @@ downloadBtn.addEventListener("click", () => {
 
 resetBtn.addEventListener("click", resetControls);
 sampleBtn.addEventListener("click", loadSampleImage);
+
+let resizeQueued = false;
+window.addEventListener("resize", () => {
+  if (!state.image || resizeQueued) {
+    return;
+  }
+
+  resizeQueued = true;
+  requestAnimationFrame(() => {
+    resizeQueued = false;
+    const preview = getPreviewSize(state.originalWidth, state.originalHeight);
+    if (preview.width === state.previewWidth && preview.height === state.previewHeight) {
+      return;
+    }
+    setPreviewSize(preview.width, preview.height);
+    render();
+  });
+});
 
 setButtonState();
 loadSampleImage();
