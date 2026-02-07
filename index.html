@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GrayGlyph</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="ambient">
+    <span class="orb orb-a"></span>
+    <span class="orb orb-b"></span>
+    <span class="orb orb-c"></span>
+  </div>
+
+  <main class="page">
+    <header class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Studio Toolkit</p>
+        <h1>GrayGlyph</h1>
+        <p class="subtitle">
+          Premium grayscale conversion for photographers, designers, and visual storytellers.
+          Tune contrast, lift, and grain in real time while keeping every pixel intact.
+        </p>
+        <div class="hero-actions">
+          <button class="primary" id="sampleBtn" type="button">Load Sample</button>
+          <button class="ghost" id="resetBtn" type="button">Reset Controls</button>
+        </div>
+      </div>
+      <div class="hero-cards">
+        <div class="stat">
+          <h3>Non-destructive</h3>
+          <p>Original stays untouched. Export a clean grayscale master.</p>
+        </div>
+        <div class="stat">
+          <h3>Real-time</h3>
+          <p>Instant preview with a film-style comparison slider.</p>
+        </div>
+        <div class="stat">
+          <h3>Precision</h3>
+          <p>Luminance-weighted conversion with adjustable contrast curve.</p>
+        </div>
+        <div class="stat">
+          <h3>High Fidelity</h3>
+          <p>Full-resolution processing and lossless PNG export for crisp detail.</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="workspace">
+      <div class="stack">
+        <div class="panel upload-panel">
+        <div class="panel-header">
+          <h2>Upload</h2>
+          <p>Drag and drop or browse. JPG, PNG, WEBP supported.</p>
+        </div>
+        <label class="dropzone" id="dropzone">
+          <input id="fileInput" type="file" accept="image/*">
+          <div>
+            <strong>Drop image here</strong>
+            <span>or click to browse</span>
+          </div>
+        </label>
+        <div class="file-meta" id="fileMeta">No file loaded</div>
+        <button id="downloadBtn" class="primary" type="button" disabled>Download PNG</button>
+      </div>
+
+      <div class="panel control-panel">
+        <div class="panel-header">
+          <h2>Adjustments</h2>
+          <p>Dial in the tonal response of your grayscale conversion.</p>
+        </div>
+        <label class="control">
+          <span>Grayscale Intensity</span>
+          <input id="intensity" type="range" min="0" max="100" value="100">
+          <output id="intensityOut">100</output>
+        </label>
+        <label class="control">
+          <span>Contrast</span>
+          <input id="contrast" type="range" min="-40" max="40" value="8">
+          <output id="contrastOut">8</output>
+        </label>
+        <label class="control">
+          <span>Brightness</span>
+          <input id="brightness" type="range" min="-30" max="30" value="4">
+          <output id="brightnessOut">4</output>
+        </label>
+        <label class="control">
+          <span>Film Grain</span>
+          <input id="grain" type="range" min="0" max="30" value="6">
+          <output id="grainOut">6</output>
+        </label>
+        <label class="toggle">
+          <input id="weightsToggle" type="checkbox" checked>
+          <span>Use luminance weighting (Rec. 709)</span>
+        </label>
+        <div class="preset-row">
+          <button class="ghost preset" data-preset="soft" type="button">Soft Matte</button>
+          <button class="ghost preset" data-preset="noir" type="button">Noir Punch</button>
+          <button class="ghost preset" data-preset="clean" type="button">Clean Neutral</button>
+          <button class="ghost preset" data-preset="high" type="button">High Key</button>
+          <button class="ghost preset" data-preset="low" type="button">Low Key</button>
+          <button class="ghost preset" data-preset="steel" type="button">Steel Grain</button>
+          <button class="ghost preset" data-preset="silk" type="button">Silk Fade</button>
+        </div>
+      </div>
+      </div>
+
+      <div class="panel preview-panel">
+        <div class="panel-header split-header">
+          <div>
+            <h2>Preview</h2>
+            <p>Slide to compare grayscale and original.</p>
+          </div>
+          <div class="split-value">
+            <span>Split</span>
+            <output id="splitOut">55</output>
+          </div>
+        </div>
+        <canvas id="compareCanvas" width="960" height="540"></canvas>
+        <input id="split" class="splitter" type="range" min="0" max="100" value="55">
+        <div class="thumbs">
+          <figure>
+            <figcaption>Original</figcaption>
+            <canvas id="sourceCanvas" width="420" height="260"></canvas>
+          </figure>
+          <figure>
+            <figcaption>Grayscale</figcaption>
+            <canvas id="outputCanvas" width="420" height="260"></canvas>
+          </figure>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">Made with &#10084; by Amal</footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
