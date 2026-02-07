@@ -327,12 +327,21 @@ button {
   gap: 8px;
   text-decoration: none;
   padding: 10px 16px;
+  background: #f5b700;
+  color: #1b1f27;
+  border: 1px solid rgba(27, 31, 39, 0.12);
+  box-shadow: none;
+  font-weight: 600;
 }
 
 .star-link svg {
   width: 18px;
   height: 18px;
   fill: currentColor;
+}
+
+.star-link:hover {
+  filter: brightness(0.96);
 }
 
 button:disabled {
