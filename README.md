@@ -9,6 +9,9 @@ Premium grayscale conversion studio in the browser with full‑resolution proces
 - Curated presets for fast looks.
 - Drag‑and‑drop upload + sample image.
 
+## Live Site
+https://grayglyph.netlify.app/
+
 ## Quick Start
 1. Open `index.html` in a browser.
 2. Drop a photo or click to upload.
