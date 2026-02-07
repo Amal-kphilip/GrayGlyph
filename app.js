@@ -4,8 +4,6 @@ const fileMeta = document.getElementById("fileMeta");
 const downloadBtn = document.getElementById("downloadBtn");
 const resetBtn = document.getElementById("resetBtn");
 const sampleBtn = document.getElementById("sampleBtn");
-const themeToggle = document.getElementById("themeToggle");
-const themeLabel = document.querySelector(".theme-label");
 
 const controls = {
   intensity: document.getElementById("intensity"),
@@ -63,20 +61,6 @@ const presets = {
   steel: { intensity: 100, contrast: 10, brightness: 0, grain: 22 },
   silk: { intensity: 85, contrast: -10, brightness: 10, grain: 2 }
 };
-
-function applyTheme(mode, persist = true) {
-  const isDark = mode === "dark";
-  document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
-  if (themeToggle) {
-    themeToggle.setAttribute("aria-pressed", String(isDark));
-  }
-  if (themeLabel) {
-    themeLabel.textContent = isDark ? "Light" : "Dark";
-  }
-  if (persist) {
-    localStorage.setItem("grayglyph-theme", mode);
-  }
-}
 
 function updateOutputs() {
   outputs.intensity.textContent = controls.intensity.value;
@@ -452,21 +436,6 @@ downloadBtn.addEventListener("click", () => {
 
 resetBtn.addEventListener("click", resetControls);
 sampleBtn.addEventListener("click", loadSampleImage);
-if (themeToggle) {
-  themeToggle.addEventListener("click", () => {
-    const current = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
-    const next = current === "dark" ? "light" : "dark";
-    applyTheme(next);
-  });
-}
 
 setButtonState();
 loadSampleImage();
-
-const storedTheme = localStorage.getItem("grayglyph-theme");
-if (storedTheme) {
-  applyTheme(storedTheme, false);
-} else if (window.matchMedia) {
-  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  applyTheme(prefersDark ? "dark" : "light", false);
-}
