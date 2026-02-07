@@ -332,6 +332,7 @@ button {
   border: 1px solid rgba(27, 31, 39, 0.12);
   box-shadow: none;
   font-weight: 600;
+  border-radius: 999px;
 }
 
 .star-link svg {
