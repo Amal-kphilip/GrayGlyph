@@ -18,6 +18,20 @@
   </div>
 
   <main class="page">
+    <div class="topbar">
+      <button class="ghost theme-toggle" id="themeToggle" type="button" aria-pressed="false">
+        <span class="theme-icon" aria-hidden="true">
+          <svg class="icon-moon" viewBox="0 0 24 24">
+            <path d="M21.5 14.3A9 9 0 1 1 9.7 2.5a7.5 7.5 0 1 0 11.8 11.8z"/>
+          </svg>
+          <svg class="icon-sun" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="4.2"/>
+            <path d="M12 2.2v2.4M12 19.4v2.4M4.4 4.4l1.7 1.7M17.9 17.9l1.7 1.7M2.2 12h2.4M19.4 12h2.4M4.4 19.6l1.7-1.7M17.9 6.1l1.7-1.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span class="theme-label">Dark</span>
+      </button>
+    </div>
     <header class="hero">
       <div class="hero-copy">
         <p class="eyebrow">Studio Toolkit</p>
@@ -72,7 +86,7 @@
           </div>
         </label>
         <div class="file-meta" id="fileMeta">No file loaded</div>
-        <button id="downloadBtn" class="primary" type="button" disabled>Download PNG</button>
+        <button id="downloadBtn" class="primary" type="button" disabled>Download Image</button>
       </div>
 
       <div class="panel control-panel">
@@ -127,8 +141,12 @@
             <output id="splitOut">55</output>
           </div>
         </div>
-        <canvas id="compareCanvas" width="960" height="540"></canvas>
-        <input id="split" class="splitter" type="range" min="0" max="100" value="55">
+        <div class="compare-wrap">
+          <canvas id="compareCanvas" width="960" height="540"></canvas>
+          <div class="slider-shell">
+            <input id="split" class="splitter" type="range" min="0" max="100" value="55">
+          </div>
+        </div>
         <div class="thumbs">
           <figure>
             <figcaption>Original</figcaption>

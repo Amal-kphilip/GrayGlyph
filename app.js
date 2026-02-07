@@ -4,6 +4,8 @@ const fileMeta = document.getElementById("fileMeta");
 const downloadBtn = document.getElementById("downloadBtn");
 const resetBtn = document.getElementById("resetBtn");
 const sampleBtn = document.getElementById("sampleBtn");
+const themeToggle = document.getElementById("themeToggle");
+const themeLabel = document.querySelector(".theme-label");
 
 const controls = {
   intensity: document.getElementById("intensity"),
@@ -37,11 +39,16 @@ const fullOutputCanvas = document.createElement("canvas");
 const fullCtx = fullCanvas.getContext("2d");
 const fullOutputCtx = fullOutputCanvas.getContext("2d");
 
+const PREVIEW_WIDTH = 960;
+const PREVIEW_HEIGHT = 540;
+
 const state = {
   image: null,
   filename: "grayscale.png",
-  previewWidth: 960,
-  previewHeight: 540,
+  mime: "image/png",
+  extension: "png",
+  previewWidth: PREVIEW_WIDTH,
+  previewHeight: PREVIEW_HEIGHT,
   originalWidth: 0,
   originalHeight: 0,
   hasUpload: false
@@ -57,6 +64,20 @@ const presets = {
   silk: { intensity: 85, contrast: -10, brightness: 10, grain: 2 }
 };
 
+function applyTheme(mode, persist = true) {
+  const isDark = mode === "dark";
+  document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
+  if (themeToggle) {
+    themeToggle.setAttribute("aria-pressed", String(isDark));
+  }
+  if (themeLabel) {
+    themeLabel.textContent = isDark ? "Light" : "Dark";
+  }
+  if (persist) {
+    localStorage.setItem("grayglyph-theme", mode);
+  }
+}
+
 function updateOutputs() {
   outputs.intensity.textContent = controls.intensity.value;
   outputs.contrast.textContent = controls.contrast.value;
@@ -67,6 +88,23 @@ function updateOutputs() {
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
+}
+
+function getContainRect(srcWidth, srcHeight, destWidth, destHeight) {
+  const srcRatio = srcWidth / srcHeight;
+  const destRatio = destWidth / destHeight;
+  let drawWidth = destWidth;
+  let drawHeight = destHeight;
+
+  if (srcRatio > destRatio) {
+    drawHeight = destWidth / srcRatio;
+  } else {
+    drawWidth = destHeight * srcRatio;
+  }
+
+  const x = (destWidth - drawWidth) / 2;
+  const y = (destHeight - drawHeight) / 2;
+  return { x, y, width: drawWidth, height: drawHeight };
 }
 
 function setPreviewSize(width, height) {
@@ -89,7 +127,13 @@ function setFullSize(width, height) {
 
 function drawOriginal() {
   sourceCtx.clearRect(0, 0, state.previewWidth, state.previewHeight);
-  sourceCtx.drawImage(fullCanvas, 0, 0, state.previewWidth, state.previewHeight);
+  const rect = getContainRect(
+    state.originalWidth,
+    state.originalHeight,
+    state.previewWidth,
+    state.previewHeight
+  );
+  sourceCtx.drawImage(fullCanvas, rect.x, rect.y, rect.width, rect.height);
 }
 
 function applyFilters() {
@@ -140,7 +184,13 @@ function applyFilters() {
   fullOutputCtx.putImageData(imageData, 0, 0);
 
   outputCtx.clearRect(0, 0, state.previewWidth, state.previewHeight);
-  outputCtx.drawImage(fullOutputCanvas, 0, 0, state.previewWidth, state.previewHeight);
+  const rect = getContainRect(
+    state.originalWidth,
+    state.originalHeight,
+    state.previewWidth,
+    state.previewHeight
+  );
+  outputCtx.drawImage(fullOutputCanvas, rect.x, rect.y, rect.width, rect.height);
 }
 
 function drawComparison() {
@@ -258,24 +308,50 @@ function setButtonState() {
   downloadBtn.disabled = !state.hasUpload;
 }
 
-function useImage(img, filename, labelPrefix) {
+function useImage(img, filename, labelPrefix, mimeType) {
   state.image = img;
   state.filename = filename;
+  state.mime = mimeType || "image/png";
+  state.extension = getExtension(filename);
 
   setFullSize(img.width, img.height);
   fullCtx.clearRect(0, 0, state.originalWidth, state.originalHeight);
   fullCtx.drawImage(img, 0, 0, state.originalWidth, state.originalHeight);
 
-  const maxWidth = 1200;
-  const maxHeight = 800;
-  const scale = Math.min(1, maxWidth / img.width, maxHeight / img.height);
-  const previewWidth = Math.round(img.width * scale);
-  const previewHeight = Math.round(img.height * scale);
-  setPreviewSize(previewWidth, previewHeight);
+  setPreviewSize(PREVIEW_WIDTH, PREVIEW_HEIGHT);
 
   render();
   fileMeta.textContent = `${labelPrefix} - ${img.width} x ${img.height}px`;
   setButtonState();
+}
+
+function getExtension(name) {
+  const match = name.match(/\.([a-zA-Z0-9]+)$/);
+  return match ? match[1].toLowerCase() : "";
+}
+
+function getDownloadFormat() {
+  const supported = new Set(["image/png", "image/jpeg", "image/webp"]);
+  let mime = state.mime;
+  if (!supported.has(mime)) {
+    const ext = state.extension;
+    if (ext === "jpg" || ext === "jpeg") {
+      mime = "image/jpeg";
+    } else if (ext === "webp") {
+      mime = "image/webp";
+    } else if (ext === "png") {
+      mime = "image/png";
+    } else {
+      mime = "image/png";
+    }
+  }
+
+  let extension = state.extension;
+  if (!extension) {
+    extension = mime === "image/jpeg" ? "jpg" : mime === "image/webp" ? "webp" : "png";
+  }
+
+  return { mime, extension };
 }
 
 function loadImage(file, nameOverride) {
@@ -284,7 +360,7 @@ function loadImage(file, nameOverride) {
     const img = new Image();
     img.onload = () => {
       const filename = nameOverride || file.name || "grayscale.png";
-      useImage(img, filename, filename);
+      useImage(img, filename, filename, file.type);
     };
     img.src = reader.result;
   };
@@ -294,7 +370,7 @@ function loadImage(file, nameOverride) {
 function loadSampleImage() {
   const img = new Image();
   img.onload = () => {
-    useImage(img, "sample-image.jpg", "Sample image");
+    useImage(img, "sample-image.jpg", "Sample image", "image/jpeg");
   };
   img.src = "assets/sample-image.jpg";
 }
@@ -367,13 +443,30 @@ downloadBtn.addEventListener("click", () => {
   }
   const link = document.createElement("a");
   const baseName = state.filename.replace(/\.[^/.]+$/, "");
-  link.download = `${baseName}-grayscale.png`;
-  link.href = fullOutputCanvas.toDataURL("image/png");
+  const { mime, extension } = getDownloadFormat();
+  const quality = mime === "image/jpeg" || mime === "image/webp" ? 0.92 : undefined;
+  link.download = `${baseName}-grayscale.${extension}`;
+  link.href = fullOutputCanvas.toDataURL(mime, quality);
   link.click();
 });
 
 resetBtn.addEventListener("click", resetControls);
 sampleBtn.addEventListener("click", loadSampleImage);
+if (themeToggle) {
+  themeToggle.addEventListener("click", () => {
+    const current = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+    const next = current === "dark" ? "light" : "dark";
+    applyTheme(next);
+  });
+}
 
 setButtonState();
 loadSampleImage();
+
+const storedTheme = localStorage.getItem("grayglyph-theme");
+if (storedTheme) {
+  applyTheme(storedTheme, false);
+} else if (window.matchMedia) {
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  applyTheme(prefersDark ? "dark" : "light", false);
+}
