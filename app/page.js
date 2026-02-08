@@ -71,7 +71,8 @@ function getExtension(name) {
 }
 
 function getDownloadFormat(mime, extension) {
-  const supported = new Set(["image/png", "image/jpeg", "image/webp"]);
+const supported = new Set(["image/png", "image/jpeg", "image/webp"]);
+const SAMPLE_IMAGE_URL = "/assets/sample-image.png";
   let finalMime = mime;
 
   if (!supported.has(finalMime)) {
@@ -477,63 +478,44 @@ export default function HomePage() {
   );
 
   const [isLoading, setIsLoading] = useState(false);
+  const sampleImageRef = useRef(null);
 
   const loadSampleImage = useCallback(async () => {
     if (isLoading) return;
-    setIsLoading(true);
-    setFileMeta("Initiating sample load...");
+    if (sampleImageRef.current) {
+      setIsLoading(true);
+      setFileMeta("Loading cached sample image...");
+      applyImage(sampleImageRef.current, "sample-image.png", "Sample image", "image/png");
+      setIsLoading(false);
+      return;
+    }
 
-    // Cache busting with timestamp
-    const imagePath = `/assets/sample-image.png?t=${Date.now()}`;
+    setIsLoading(true);
+    setFileMeta("Loading sample image...");
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.decoding = "async";
+    img.src = SAMPLE_IMAGE_URL;
 
     try {
-      console.log("Fetching sample image...");
-      setFileMeta("Fetching image data (5s timeout)...");
-
-      // Create a timeout promise
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Fetch timeout")), 5000)
-      );
-
-      // Race fetch against timeout
-      const response = await Promise.race([
-        fetch(imagePath),
-        timeoutPromise
-      ]);
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status} ${response.statusText}`);
+      if (img.decode) {
+        await img.decode();
+      } else {
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+        });
       }
-
-      setFileMeta("Processing image data...");
-      const blob = await response.blob();
-      console.log("Sample image fetched, loading blob...");
-
-      loadBlobImage(blob, "sample-image.png", "Sample image", "image/png");
-
+      sampleImageRef.current = img;
+      applyImage(img, "sample-image.png", "Sample image", "image/png");
+      setIsLoading(false);
     } catch (error) {
-      console.warn("Fetch failed, attempting direct load fallback:", error);
-      setFileMeta(`Fetch failed (${error.message}). Retrying with direct load...`);
-
-      // Fallback: Try loading directly as an image object
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-
-      img.onload = () => {
-        console.log("Direct image load successful");
-        applyImage(img, "sample-image.png", "Sample image", "image/png");
-        setIsLoading(false);
-      };
-
-      img.onerror = (e) => {
-        console.error("Direct load also failed:", e);
-        setFileMeta(`Critical failure: Could not load image directly.`);
-        setIsLoading(false);
-      };
-
-      img.src = imagePath;
+      console.error("Sample image load failed:", error);
+      setFileMeta("Failed to load sample image.");
+      setIsLoading(false);
     }
-  }, [isLoading, loadBlobImage, applyImage]);
+  }, [isLoading, applyImage]);
 
   const applyPreset = useCallback((presetName) => {
     const preset = PRESETS[presetName];
@@ -585,6 +567,17 @@ export default function HomePage() {
       }
     };
   }, [applyPreviewSize]);
+
+  useEffect(() => {
+    if (sampleImageRef.current) return;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.decoding = "async";
+    img.onload = () => {
+      sampleImageRef.current = img;
+    };
+    img.src = SAMPLE_IMAGE_URL;
+  }, []);
 
   useEffect(() => {
     // Auto-load sample image only once
