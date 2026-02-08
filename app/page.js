@@ -59,6 +59,11 @@ function getContainRect(srcWidth, srcHeight, destWidth, destHeight) {
   return { x, y, width: drawWidth, height: drawHeight };
 }
 
+function getSliderBackground(value, min, max) {
+  const percentage = ((value - min) / (max - min)) * 100;
+  return `linear-gradient(to right, #1672f3 ${percentage}%, rgba(18, 21, 28, 0.12) ${percentage}%)`;
+}
+
 function getExtension(name) {
   const match = name.match(/\.([a-zA-Z0-9]+)$/);
   return match ? match[1].toLowerCase() : "";
@@ -671,9 +676,7 @@ export default function HomePage() {
             >
               {isLoading ? "Loading..." : "Load Sample"}
             </button>
-            <button type="button" onClick={resetControls} className="btn-ghost">
-              Reset Controls
-            </button>
+
             <a
               className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[#f5b700] px-4 py-2 font-semibold text-[#1b1f27] transition hover:brightness-95"
               href="https://github.com/Amal-kphilip/GrayGlyph"
@@ -760,9 +763,18 @@ export default function HomePage() {
           </section>
 
           <section className="glass-panel animate-rise p-5" style={{ animationDelay: "90ms" }}>
-            <div>
-              <h2 className="text-xl font-semibold">Adjustments</h2>
-              <p className="text-sm text-muted">Dial in the tonal response of your grayscale conversion.</p>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-semibold">Adjustments</h2>
+                <p className="text-sm text-muted">Dial in the tonal response of your grayscale conversion.</p>
+              </div>
+              <button
+                type="button"
+                onClick={resetControls}
+                className="text-xs font-medium text-ink-soft underline decoration-transparent underline-offset-4 transition hover:text-ink hover:decoration-ink/30"
+              >
+                Reset
+              </button>
             </div>
 
             <label className="mt-4 grid grid-cols-[1fr_auto] items-center gap-2">
@@ -777,6 +789,7 @@ export default function HomePage() {
                   setControls((current) => ({ ...current, intensity: Number(event.target.value) }))
                 }
                 className="range-input col-span-2"
+                style={{ background: getSliderBackground(controls.intensity, 0, 100) }}
               />
             </label>
 
@@ -792,6 +805,7 @@ export default function HomePage() {
                   setControls((current) => ({ ...current, contrast: Number(event.target.value) }))
                 }
                 className="range-input col-span-2"
+                style={{ background: getSliderBackground(controls.contrast, -40, 40) }}
               />
             </label>
 
@@ -807,6 +821,7 @@ export default function HomePage() {
                   setControls((current) => ({ ...current, brightness: Number(event.target.value) }))
                 }
                 className="range-input col-span-2"
+                style={{ background: getSliderBackground(controls.brightness, -30, 30) }}
               />
             </label>
 
@@ -822,6 +837,7 @@ export default function HomePage() {
                   setControls((current) => ({ ...current, grain: Number(event.target.value) }))
                 }
                 className="range-input col-span-2"
+                style={{ background: getSliderBackground(controls.grain, 0, 30) }}
               />
             </label>
 
@@ -878,6 +894,7 @@ export default function HomePage() {
                 value={split}
                 onChange={(event) => setSplit(Number(event.target.value))}
                 className="range-input"
+                style={{ background: getSliderBackground(split, 0, 100) }}
               />
             </div>
           </div>
