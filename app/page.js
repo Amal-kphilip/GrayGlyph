@@ -10,6 +10,7 @@ const MOBILE_PREVIEW_MAX_EDGE = 960;
 const MOBILE_MIN_PREVIEW_ASPECT = 3 / 4;
 const MOBILE_MAX_PREVIEW_ASPECT = 16 / 9;
 const MOBILE_BREAKPOINT = 820;
+const SAMPLE_IMAGE_URL = "/assets/sample-image.png";
 
 const DEFAULT_CONTROLS = {
   intensity: 100,
