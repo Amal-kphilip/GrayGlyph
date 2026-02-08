@@ -18,26 +18,26 @@ const cormorant = Cormorant_Garamond({
 export const metadata = {
   metadataBase: new URL("https://grayglyph.netlify.app"),
   title: {
-    default: "Image to Grayscale Converter Online | GrayGlyph",
+    default: "GrayGlyph - Free Image Editor & Grayscale Converter",
     template: "%s | GrayGlyph"
   },
   description:
-    "Free online image to grayscale converter. Convert photos to grayscale instantly without uploading. Fast, secure, and works offline in your browser.",
+    "Free online photo editor and grayscale converter. Professional color grading, curves, and presets. Privacy-first, browser-based processing.",
   keywords: [
-    "image to grayscale",
-    "grayscale image converter",
-    "photo to grayscale online",
-    "black and white image tool",
-    "remove color from image",
-    "grayscale filter online"
+    "image editor online",
+    "photo editor free",
+    "grayscale converter",
+    "color grading tool",
+    "curves adjustment online",
+    "browser based photo editor"
   ],
   authors: [{ name: "GrayGlyph" }],
   alternates: {
     canonical: "/"
   },
   openGraph: {
-    title: "GrayGlyph - Image to Grayscale Converter",
-    description: "Convert images to grayscale instantly in your browser. No upload, no signup.",
+    title: "GrayGlyph - Free Image Editor & Grayscale Converter",
+    description: "Professional photo editing tools in your browser. Curves, color grading, and presets. No upload required.",
     url: "https://grayglyph.netlify.app/",
     type: "website",
     siteName: "GrayGlyph",
@@ -47,14 +47,14 @@ export const metadata = {
         url: "/assets/grayglyph-logo.png",
         width: 1200,
         height: 630,
-        alt: "GrayGlyph Preview"
+        alt: "GrayGlyph Editor"
       }
     ]
   },
   twitter: {
     card: "summary_large_image",
-    title: "GrayGlyph - Image to Grayscale Converter",
-    description: "Convert images to grayscale instantly in your browser. No upload, no signup.",
+    title: "GrayGlyph - Free Image Editor & Grayscale Converter",
+    description: "Professional photo editing tools in your browser. Curves, color grading, and presets. No upload required.",
     images: ["/assets/grayglyph-logo.png"]
   },
   robots: {
@@ -69,9 +69,9 @@ export const metadata = {
     }
   },
   icons: {
-    icon: [{ url: "/favicon.png", type: "image/png" }],
-    shortcut: ["/favicon.png"],
-    apple: "/assets/grayglyph-logo.png"
+    icon: [{ url: "/assets/icon.jpg", type: "image/jpeg" }],
+    shortcut: ["/assets/icon.jpg"],
+    apple: "/assets/icon.jpg"
   },
   verification: {
     google: "google-site-verification-code", // Placeholder
@@ -81,7 +81,12 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${sora.variable} ${cormorant.variable} antialiased`}>{children}</body>
+      <body className={`${sora.variable} ${cormorant.variable} antialiased min-h-screen flex flex-col`}>
+        {children}
+        <footer className="mt-auto py-6 text-center text-xs text-gray-600">
+          Made with ❤️ by Amal
+        </footer>
+      </body>
     </html>
   );
 }

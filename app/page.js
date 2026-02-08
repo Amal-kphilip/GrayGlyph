@@ -1,6 +1,7 @@
 "use client";
 
 import NextImage from "next/image";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const DESKTOP_PREVIEW_WIDTH = 960;
@@ -676,6 +677,13 @@ export default function HomePage() {
               {isLoading ? "Loading..." : "Load Sample"}
             </button>
 
+            <Link
+              href="/editor"
+              className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2 font-semibold text-ink transition hover:bg-gray-50 hover:border-black/20"
+            >
+              <span>✨</span> Advanced Photo Editor
+            </Link>
+
             <a
               className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[#f5b700] px-4 py-2 font-semibold text-[#1b1f27] transition hover:brightness-95"
               href="https://github.com/Amal-kphilip/GrayGlyph"
@@ -957,7 +965,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <footer className="pb-6 pt-5 text-center text-sm text-muted">Made with ♥ by Amal</footer>
     </main>
   );
 }

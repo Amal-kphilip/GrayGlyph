@@ -1,20 +1,29 @@
 # GrayGlyph (Next.js + React + Tailwind)
 
-GrayGlyph is now built with Next.js, React, and Tailwind CSS for a smoother, responsive UI while preserving full-resolution grayscale processing in the browser.
+GrayGlyph is a powerful browser-based image processing suite. It features a dedicated Grayscale Converter and a new Advanced Photo Editor for professional-grade color grading and adjustments.
 
 ## Stack
 - Next.js (App Router)
 - React
 - Tailwind CSS
-- Canvas API (client-side image processing)
+- Canvas API & Web Workers (High-performance client-side processing)
 
 ## Features
-- Full-resolution grayscale conversion and export.
-- Live before/after split preview with labels.
-- Adjustable intensity, contrast, brightness, and film grain.
-- Luminance-weighted conversion toggle (Rec. 709).
-- Mobile-first responsive layout with adaptive preview sizing.
-- Drag-and-drop upload and sample image loader.
+
+### Grayscale Converter (/)
+- **Luminance-Weighted Conversion**: precise black and white transform (Rec. 709).
+- **Non-Destructive**: Original image stays untouched.
+- **Real-Time Comparison**: "Before / After" split slider.
+- **Grain & Contrast**: Adjustable film grain and tonal contrast.
+
+### Advanced Photo Editor (/editor)
+- **Professional Color Grading**: Split toning for Shadows, Midtones, and Highlights.
+- **Tone Curves**: Master, Red, Green, and Blue channel curve adjustments.
+- **Color Mixer**: HSL adjustments for 8 individual color channels.
+- **Smart Presets**: Instant, professional looks (Soft, Noir, Steel, etc.).
+- **Detail Tools**: Sharpening and Noise Reduction.
+- **Geometry**: Crop, Rotate, Flip, and Straighten.
+- **Privacy First**: All processing happens in your browser via Web Workers. No uploads.
 
 ## Getting Started
 1. Install dependencies:
@@ -28,12 +37,12 @@ GrayGlyph is now built with Next.js, React, and Tailwind CSS for a smoother, res
 - Production build: `npm run build`
 - Start production server: `npm run start`
 
-## Project Structure
-- `app/layout.js` - metadata and root layout.
-- `app/page.js` - React UI + canvas processing logic.
-- `app/globals.css` - Tailwind layers and custom styling.
-- `public/assets/` - logo and sample image.
+## Site Structure
+- `/` - **Home**: Grayscale Converter.
+- `/editor` - **Editor**: Advanced Photo Editor.
 
 ## Notes
-- Processing happens locally in-browser; no server upload is required.
-- Export uses the processed full-resolution output.
+- Performance is optimized using Web Workers and Transferable Objects for zero-latency UI.
+- Full-resolution export for both tools.
+
+[Live Demo](https://grayglyph.netlify.app/)

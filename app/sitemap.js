@@ -5,5 +5,10 @@ export default function sitemap() {
             lastModified: new Date(),
             priority: 1.0,
         },
+        {
+            url: 'https://grayglyph.netlify.app/editor',
+            lastModified: new Date(),
+            priority: 0.9,
+        },
     ];
 }
