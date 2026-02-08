@@ -945,6 +945,18 @@ export default function HomePage() {
         </p>
       </section>
 
+      <section className="glass-panel animate-rise mt-4 p-5" style={{ animationDelay: "180ms" }}>
+        <h2 className="text-xl font-semibold">The Best Browser-Based Image Tool for Developers & Creators</h2>
+        <div className="mt-2 space-y-3 text-sm leading-relaxed text-ink-soft md:text-base">
+          <p>
+            In a web filled with subscription walls and slow uploads, GrayGlyph stands out as a completely <strong>free image to grayscale</strong> utility that respects your time and privacy. Built with modern web technologies, it serves as a reliable reference for what a powerful <strong>browser-based image tool</strong> can achieve without server-side processing.
+          </p>
+          <p>
+            If you are building a resource list, writing a blog post about design tools, or sharing useful utilities on GitHub or Reddit, GrayGlyph is the perfect example of a fast, secure, and <strong>free image to black and white</strong> converter. It requires no login, no installation, and no cloud uploads—making it an essential boomark for anyone needing quick, high-quality monochrome conversion.
+          </p>
+        </div>
+      </section>
+
       <footer className="pb-6 pt-5 text-center text-sm text-muted">Made with ♥ by Amal</footer>
     </main>
   );
