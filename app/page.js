@@ -661,11 +661,10 @@ export default function HomePage() {
       <header className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
         <section className="glass-panel animate-rise p-5 md:p-6">
           <h1 className="font-serifDisplay text-4xl leading-tight text-ink md:text-5xl">
-            Image to Grayscale Converter Online
+            Free Image to Grayscale & Black and White Converter
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-ink-soft md:text-base">
-            Premium grayscale conversion for photographers, designers, and visual storytellers.
-            Tune contrast, lift, and grain in real time while keeping every pixel intact.
+            Easily convert images to grayscale online with our free tool. Whether you need a classic black and white effect or a custom monochrome look, this browser-based converter handles it all instantly. No upload required—your photos stay private and secure on your device.
           </p>
           <div className="mt-5 flex flex-wrap gap-2.5">
             <button
@@ -921,19 +920,29 @@ export default function HomePage() {
       </section>
 
       <section className="glass-panel animate-rise mt-4 p-5" style={{ animationDelay: "140ms" }}>
-        <h2 className="text-2xl font-semibold">Convert Images to Grayscale Instantly</h2>
+        <h2 className="text-2xl font-semibold">Free Image to Grayscale Converter Online</h2>
         <p className="mt-2 text-sm leading-relaxed text-ink-soft md:text-base">
-          GrayGlyph is an image to grayscale tool built for fast online use in a browser-based
-          workflow with no upload required. Convert color photos directly in your browser, keep
-          control of your files locally, and get instant grayscale results.
+          GrayGlyph is the premier <strong>free image to grayscale</strong> tool designed for speed and privacy. Unlike other converters that require uploading your sensitive photos to a server, our <strong>image to grayscale converter</strong> works entirely in your browser. This means you can <strong>convert image to grayscale online</strong> without waiting for uploads or worrying about data privacy.
         </p>
-        <h3 className="mt-4 text-lg font-semibold">Why use GrayGlyph?</h3>
-        <ul className="mt-2 list-disc pl-5 text-sm text-ink-soft md:text-base">
-          <li>No image upload required</li>
-          <li>Fast grayscale conversion</li>
-          <li>Works on mobile and desktop</li>
-          <li>Free and secure</li>
+
+        <h2 className="mt-6 text-xl font-semibold">Convert Images to Black and White for Free</h2>
+        <p className="mt-2 text-sm leading-relaxed text-ink-soft md:text-base">
+          Looking for a <strong>black and white image converter</strong> that gives you full control? Our tool goes beyond simple desaturation. Use the adjustments panel to fine-tune intensity, contrast, brightness, and even add film grain to create the perfect <strong>free image to black and white</strong> analytic look.
+        </p>
+
+        <h3 className="mt-6 text-lg font-semibold">Why use GrayGlyph?</h3>
+        <ul className="mt-2 list-disc pl-5 text-sm text-ink-soft md:text-base space-y-1">
+          <li><strong>Free image to grayscale conversion</strong>: 100% free forever, no limits.</li>
+          <li><strong>Free image to black and white tool</strong>: Professional-grade B&W editing suite.</li>
+          <li><strong>No image upload required</strong>: Works offline and keeps your data safe.</li>
+          <li><strong>Fast and secure</strong>: Instant processing with no server lag.</li>
+          <li><strong>Works on mobile and desktop</strong>: Fully responsive design for any device.</li>
         </ul>
+
+        <h2 className="mt-6 text-xl font-semibold">Simple, Fast, and Free Image Conversion</h2>
+        <p className="mt-2 text-sm leading-relaxed text-ink-soft md:text-base">
+          Whether you are a professional photographer or just want to edit a photo for social media, GrayGlyph makes it simple. Drag and drop your file, adjust the sliders to taste, and download your high-resolution monochrome masterpiece.
+        </p>
       </section>
 
       <footer className="pb-6 pt-5 text-center text-sm text-muted">Made with ♥ by Amal</footer>
