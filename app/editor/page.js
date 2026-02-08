@@ -411,7 +411,11 @@ export default function EditorPage() {
                 <div className="relative flex flex-col gap-2 sm:h-12 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-2 sm:gap-4">
                         <Link href="/" className="font-bold text-gray-800 tracking-tight flex items-center gap-2">
-                            <span className="text-lg sm:text-xl">?</span>
+                            <span className="inline-flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center text-yellow-500" aria-hidden="true">
+                                <svg viewBox="0 0 20 20" className="h-full w-full fill-current">
+                                    <path d="M11.6 1.5 3 11.2h5l-1.6 7.3L17 8.8h-5l-0.4-7.3z" />
+                                </svg>
+                            </span>
                             <span className="truncate max-w-[40vw] sm:max-w-none">GrayGlyph</span>
                             <span className="hidden sm:inline text-xs font-normal text-gray-500 uppercase px-1.5 py-0.5 bg-gray-100 rounded">Editor</span>
                         </Link>
