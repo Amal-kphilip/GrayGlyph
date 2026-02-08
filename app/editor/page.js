@@ -406,46 +406,51 @@ export default function EditorPage() {
         <div className="flex h-screen flex-col bg-gray-100 overflow-hidden font-sans fixed inset-0">
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
 
-            {/* Toolbar */}
-            <header className="flex-shrink-0 h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 z-20 shadow-sm">
-                <div className="flex items-center gap-4">
-                    <Link href="/" className="font-bold text-gray-800 tracking-tight flex items-center gap-2">
-                        <span className="text-xl">⚡</span> GrayGlyph <span className="text-xs font-normal text-gray-500 uppercase px-1.5 py-0.5 bg-gray-100 rounded">Editor</span>
-                    </Link>
-                </div>
+                        {/* Toolbar */}
+            <header className="flex-shrink-0 bg-white border-b border-gray-200 px-3 py-2 z-20 shadow-sm">
+                <div className="relative flex flex-col gap-2 sm:h-12 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-2 sm:gap-4">
+                        <Link href="/" className="font-bold text-gray-800 tracking-tight flex items-center gap-2">
+                            <span className="text-lg sm:text-xl">?</span>
+                            <span className="truncate max-w-[40vw] sm:max-w-none">GrayGlyph</span>
+                            <span className="hidden sm:inline text-xs font-normal text-gray-500 uppercase px-1.5 py-0.5 bg-gray-100 rounded">Editor</span>
+                        </Link>
+                    </div>
 
-                <div className="absolute left-1/2 transform -translate-x-1/2 flex gap-2">
-                    <button
-                        onMouseDown={() => setShowOriginal(true)}
-                        onMouseUp={() => setShowOriginal(false)}
-                        onMouseLeave={() => setShowOriginal(false)}
-                        onTouchStart={() => setShowOriginal(true)}
-                        onTouchEnd={() => setShowOriginal(false)}
-                        disabled={!state.isLoaded || isCropping}
-                        className={`flex items-center gap-2 px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-full transition-all 
+                    <div className="flex items-center gap-2 sm:order-3">
+                        <button onClick={() => fileInputRef.current.click()} className="flex items-center gap-2 px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors border border-transparent hover:border-gray-200">
+                            <FaUpload size={12} /> Open
+                        </button>
+                        <button onClick={handleDownload} disabled={!state.isLoaded} className="flex items-center gap-2 px-4 py-1.5 text-xs sm:text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors shadow-sm">
+                            <FaDownload size={12} /> Export
+                        </button>
+                    </div>
+
+                    <div className="flex items-center justify-center gap-2 sm:absolute sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2">
+                        <button
+                            onMouseDown={() => setShowOriginal(true)}
+                            onMouseUp={() => setShowOriginal(false)}
+                            onMouseLeave={() => setShowOriginal(false)}
+                            onTouchStart={() => setShowOriginal(true)}
+                            onTouchEnd={() => setShowOriginal(false)}
+                            disabled={!state.isLoaded || isCropping}
+                            className={`flex items-center gap-2 px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-full transition-all select-none 
                             ${showOriginal ? "bg-blue-600 text-white shadow-inner" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
-                    >
-                        {showOriginal ? "Original" : "Hold for Before"}
-                    </button>
-                    {isCropping && (
-                        <div className="flex gap-2">
-                            <button onClick={handleCropCancel} className="bg-gray-700 text-white px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-full shadow-lg hover:bg-gray-600">
-                                Cancel
-                            </button>
-                            <button onClick={handleCropDone} className="bg-green-600 text-white px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-full shadow-lg hover:bg-green-500">
-                                Done
-                            </button>
-                        </div>
-                    )}
-                </div>
-
-                <div className="flex gap-2">
-                    <button onClick={() => fileInputRef.current.click()} className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors border border-transparent hover:border-gray-200">
-                        <FaUpload size={12} /> Open
-                    </button>
-                    <button onClick={handleDownload} disabled={!state.isLoaded} className="flex items-center gap-2 px-4 py-1.5 text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors shadow-sm">
-                        <FaDownload size={12} /> Export
-                    </button>
+                        >
+                            <span className="sm:hidden">{showOriginal ? "Original" : "Before"}</span>
+                            <span className="hidden sm:inline">{showOriginal ? "Original" : "Hold for Before"}</span>
+                        </button>
+                        {isCropping && (
+                            <div className="flex gap-2">
+                                <button onClick={handleCropCancel} className="bg-gray-700 text-white px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-full shadow-lg hover:bg-gray-600">
+                                    Cancel
+                                </button>
+                                <button onClick={handleCropDone} className="bg-green-600 text-white px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-full shadow-lg hover:bg-green-500">
+                                    Done
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </header>
 
@@ -495,3 +500,4 @@ export default function EditorPage() {
         </div>
     );
 }
+
