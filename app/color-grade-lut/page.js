@@ -1,0 +1,1143 @@
+"use client";
+
+import NextImage from "next/image";
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+const DESKTOP_MAX_WIDTH = 960;
+const DESKTOP_MAX_HEIGHT = 540;
+const MOBILE_PREVIEW_MAX_EDGE = 960;
+const MOBILE_MIN_PREVIEW_ASPECT = 3 / 4;
+const MOBILE_MAX_PREVIEW_ASPECT = 16 / 9;
+const MOBILE_BREAKPOINT = 820;
+const LUT_SIZE = 16;
+const MAX_SAMPLE_EDGE = 512;
+const MAX_SAMPLE_COUNT = 120000;
+const INPUT_PREVIEW_MAX_WIDTH = 320;
+const INPUT_PREVIEW_MAX_HEIGHT = 220;
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+function getPreviewSize(imageWidth, imageHeight) {
+  const aspect = imageWidth / imageHeight;
+
+  if (typeof window === "undefined" || window.innerWidth > MOBILE_BREAKPOINT) {
+    const maxAspect = DESKTOP_MAX_WIDTH / DESKTOP_MAX_HEIGHT;
+    if (aspect >= maxAspect) {
+      return {
+        width: DESKTOP_MAX_WIDTH,
+        height: Math.max(1, Math.round(DESKTOP_MAX_WIDTH / aspect))
+      };
+    }
+
+    return {
+      width: Math.max(1, Math.round(DESKTOP_MAX_HEIGHT * aspect)),
+      height: DESKTOP_MAX_HEIGHT
+    };
+  }
+
+  const safeAspect = clamp(aspect, MOBILE_MIN_PREVIEW_ASPECT, MOBILE_MAX_PREVIEW_ASPECT);
+  if (safeAspect >= 1) {
+    return {
+      width: MOBILE_PREVIEW_MAX_EDGE,
+      height: Math.max(1, Math.round(MOBILE_PREVIEW_MAX_EDGE / safeAspect))
+    };
+  }
+
+  return {
+    width: Math.max(1, Math.round(MOBILE_PREVIEW_MAX_EDGE * safeAspect)),
+    height: MOBILE_PREVIEW_MAX_EDGE
+  };
+}
+
+function getSampleSize(imageWidth, imageHeight) {
+  const aspect = imageWidth / imageHeight;
+  if (aspect >= 1) {
+    return {
+      width: MAX_SAMPLE_EDGE,
+      height: Math.max(1, Math.round(MAX_SAMPLE_EDGE / aspect))
+    };
+  }
+
+  return {
+    width: Math.max(1, Math.round(MAX_SAMPLE_EDGE * aspect)),
+    height: MAX_SAMPLE_EDGE
+  };
+}
+
+function getContainRect(srcWidth, srcHeight, destWidth, destHeight) {
+  const srcRatio = srcWidth / srcHeight;
+  const destRatio = destWidth / destHeight;
+  let drawWidth = destWidth;
+  let drawHeight = destHeight;
+
+  if (srcRatio > destRatio) {
+    drawHeight = destWidth / srcRatio;
+  } else {
+    drawWidth = destHeight * srcRatio;
+  }
+
+  const x = (destWidth - drawWidth) / 2;
+  const y = (destHeight - drawHeight) / 2;
+  return { x, y, width: drawWidth, height: drawHeight };
+}
+
+function getSliderBackground(value, min, max) {
+  const percentage = ((value - min) / (max - min)) * 100;
+  return `linear-gradient(to right, #1672f3 ${percentage}%, rgba(18, 21, 28, 0.12) ${percentage}%)`;
+}
+
+function srgbToLinearChannel(value) {
+  const v = value / 255;
+  return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+}
+
+function linearToSrgbChannel(value) {
+  const v = value <= 0.0031308
+    ? value * 12.92
+    : 1.055 * Math.pow(value, 1 / 2.4) - 0.055;
+  return v * 255;
+}
+
+export function rgbToLinear(r, g, b, out) {
+  const result = out || new Float32Array(3);
+  result[0] = srgbToLinearChannel(r);
+  result[1] = srgbToLinearChannel(g);
+  result[2] = srgbToLinearChannel(b);
+  return result;
+}
+
+export function linearToRgb(r, g, b, out) {
+  const result = out || new Float32Array(3);
+  result[0] = linearToSrgbChannel(r);
+  result[1] = linearToSrgbChannel(g);
+  result[2] = linearToSrgbChannel(b);
+  return result;
+}
+
+function lutIndex(size, r, g, b) {
+  return ((b * size + g) * size + r) * 3;
+}
+
+function drawBadge(ctx, text, x, y, height, radius, alignRight = false) {
+  const fontSize = 12;
+  ctx.save();
+  ctx.font = `600 ${fontSize}px Sora, sans-serif`;
+  ctx.textBaseline = "middle";
+
+  const textWidth = ctx.measureText(text).width;
+  const width = textWidth + 22;
+  const drawX = alignRight ? x - width : x;
+
+  ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+  ctx.strokeStyle = "rgba(18, 21, 28, 0.2)";
+  ctx.lineWidth = 1;
+
+  ctx.beginPath();
+  ctx.moveTo(drawX + radius, y);
+  ctx.lineTo(drawX + width - radius, y);
+  ctx.quadraticCurveTo(drawX + width, y, drawX + width, y + radius);
+  ctx.lineTo(drawX + width, y + height - radius);
+  ctx.quadraticCurveTo(drawX + width, y + height, drawX + width - radius, y + height);
+  ctx.lineTo(drawX + radius, y + height);
+  ctx.quadraticCurveTo(drawX, y + height, drawX, y + height - radius);
+  ctx.lineTo(drawX, y + radius);
+  ctx.quadraticCurveTo(drawX, y, drawX + radius, y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "rgba(18, 21, 28, 0.8)";
+  ctx.fillText(text, drawX + 11, y + height / 2);
+  ctx.restore();
+}
+
+function drawPreviewLabels(ctx, splitX, previewWidth) {
+  const padding = 14;
+  const badgeHeight = 24;
+  const badgeRadius = 10;
+  const splitLabel = splitX < previewWidth / 2 ? "Before" : "After";
+
+  drawBadge(ctx, "After", padding, padding, badgeHeight, badgeRadius);
+  drawBadge(ctx, "Before", previewWidth - padding, padding, badgeHeight, badgeRadius, true);
+
+  const labelWidth = splitLabel.length * 7 + 22;
+  const labelX = clamp(splitX - labelWidth / 2, padding, previewWidth - padding - labelWidth);
+  drawBadge(ctx, splitLabel, labelX, padding + 32, badgeHeight, badgeRadius);
+}
+
+export function generate3DLUT(sourcePixels, lutSize) {
+  const size = lutSize || LUT_SIZE;
+  const totalBins = size * size * size;
+  const lut = new Float32Array(totalBins * 3);
+  const counts = new Uint32Array(totalBins);
+
+  if (!sourcePixels || sourcePixels.length === 0) {
+    let write = 0;
+    for (let b = 0; b < size; b += 1) {
+      const bValue = b / (size - 1);
+      for (let g = 0; g < size; g += 1) {
+        const gValue = g / (size - 1);
+        for (let r = 0; r < size; r += 1) {
+          const rValue = r / (size - 1);
+          lut[write++] = rValue;
+          lut[write++] = gValue;
+          lut[write++] = bValue;
+        }
+      }
+    }
+    lut.size = size;
+    return lut;
+  }
+
+  const totalPixels = Math.floor(sourcePixels.length / 4);
+  const step = Math.max(1, Math.floor(totalPixels / MAX_SAMPLE_COUNT));
+
+  for (let i = 0; i < sourcePixels.length; i += 4 * step) {
+    const r = sourcePixels[i];
+    const g = sourcePixels[i + 1];
+    const b = sourcePixels[i + 2];
+
+    const rLin = srgbToLinearChannel(r);
+    const gLin = srgbToLinearChannel(g);
+    const bLin = srgbToLinearChannel(b);
+
+    const rIndex = Math.min(size - 1, Math.max(0, Math.floor(rLin * (size - 1))));
+    const gIndex = Math.min(size - 1, Math.max(0, Math.floor(gLin * (size - 1))));
+    const bIndex = Math.min(size - 1, Math.max(0, Math.floor(bLin * (size - 1))));
+
+    const bin = bIndex * size * size + gIndex * size + rIndex;
+    const idx = bin * 3;
+    lut[idx] += rLin;
+    lut[idx + 1] += gLin;
+    lut[idx + 2] += bLin;
+    counts[bin] += 1;
+  }
+
+  for (let bin = 0; bin < totalBins; bin += 1) {
+    const count = counts[bin];
+    if (count > 0) {
+      const idx = bin * 3;
+      lut[idx] /= count;
+      lut[idx + 1] /= count;
+      lut[idx + 2] /= count;
+    }
+  }
+
+  let filledCount = 0;
+  for (let bin = 0; bin < totalBins; bin += 1) {
+    if (counts[bin] > 0) {
+      filledCount += 1;
+    }
+  }
+
+  if (filledCount === 0) {
+    let write = 0;
+    for (let b = 0; b < size; b += 1) {
+      const bValue = b / (size - 1);
+      for (let g = 0; g < size; g += 1) {
+        const gValue = g / (size - 1);
+        for (let r = 0; r < size; r += 1) {
+          const rValue = r / (size - 1);
+          lut[write++] = rValue;
+          lut[write++] = gValue;
+          lut[write++] = bValue;
+        }
+      }
+    }
+    lut.size = size;
+    return lut;
+  }
+
+  const filledR = new Uint8Array(filledCount);
+  const filledG = new Uint8Array(filledCount);
+  const filledB = new Uint8Array(filledCount);
+  const filledIndex = new Uint32Array(filledCount);
+
+  let filledCursor = 0;
+  for (let b = 0; b < size; b += 1) {
+    for (let g = 0; g < size; g += 1) {
+      for (let r = 0; r < size; r += 1) {
+        const bin = b * size * size + g * size + r;
+        if (counts[bin] > 0) {
+          filledR[filledCursor] = r;
+          filledG[filledCursor] = g;
+          filledB[filledCursor] = b;
+          filledIndex[filledCursor] = bin * 3;
+          filledCursor += 1;
+        }
+      }
+    }
+  }
+
+  for (let b = 0; b < size; b += 1) {
+    for (let g = 0; g < size; g += 1) {
+      for (let r = 0; r < size; r += 1) {
+        const bin = b * size * size + g * size + r;
+        if (counts[bin] > 0) {
+          continue;
+        }
+
+        let bestIndex = 0;
+        let bestDistance = Infinity;
+
+        for (let i = 0; i < filledCount; i += 1) {
+          const dr = r - filledR[i];
+          const dg = g - filledG[i];
+          const db = b - filledB[i];
+          const distance = dr * dr + dg * dg + db * db;
+          if (distance < bestDistance) {
+            bestDistance = distance;
+            bestIndex = filledIndex[i];
+            if (distance === 0) {
+              break;
+            }
+          }
+        }
+
+        const write = bin * 3;
+        lut[write] = lut[bestIndex];
+        lut[write + 1] = lut[bestIndex + 1];
+        lut[write + 2] = lut[bestIndex + 2];
+      }
+    }
+  }
+
+  lut.size = size;
+  return lut;
+}
+
+export function trilinearSample(lut, r, g, b, out) {
+  const size = lut.size || Math.round(Math.cbrt(lut.length / 3));
+  const max = size - 1;
+
+  const x = clamp(r, 0, 1) * max;
+  const y = clamp(g, 0, 1) * max;
+  const z = clamp(b, 0, 1) * max;
+
+  const x0 = Math.floor(x);
+  const y0 = Math.floor(y);
+  const z0 = Math.floor(z);
+  const x1 = Math.min(x0 + 1, max);
+  const y1 = Math.min(y0 + 1, max);
+  const z1 = Math.min(z0 + 1, max);
+
+  const tx = x - x0;
+  const ty = y - y0;
+  const tz = z - z0;
+
+  const idx000 = lutIndex(size, x0, y0, z0);
+  const idx100 = lutIndex(size, x1, y0, z0);
+  const idx010 = lutIndex(size, x0, y1, z0);
+  const idx110 = lutIndex(size, x1, y1, z0);
+  const idx001 = lutIndex(size, x0, y0, z1);
+  const idx101 = lutIndex(size, x1, y0, z1);
+  const idx011 = lutIndex(size, x0, y1, z1);
+  const idx111 = lutIndex(size, x1, y1, z1);
+
+  const outVec = out || new Float32Array(3);
+
+  for (let c = 0; c < 3; c += 1) {
+    const c000 = lut[idx000 + c];
+    const c100 = lut[idx100 + c];
+    const c010 = lut[idx010 + c];
+    const c110 = lut[idx110 + c];
+    const c001 = lut[idx001 + c];
+    const c101 = lut[idx101 + c];
+    const c011 = lut[idx011 + c];
+    const c111 = lut[idx111 + c];
+
+    const c00 = c000 + (c100 - c000) * tx;
+    const c10 = c010 + (c110 - c010) * tx;
+    const c01 = c001 + (c101 - c001) * tx;
+    const c11 = c011 + (c111 - c011) * tx;
+
+    const c0 = c00 + (c10 - c00) * ty;
+    const c1 = c01 + (c11 - c01) * ty;
+
+    outVec[c] = c0 + (c1 - c0) * tz;
+  }
+
+  return outVec;
+}
+
+export function apply3DLUT(targetPixels, lut, intensity, output) {
+  const out = output || new Uint8ClampedArray(targetPixels.length);
+  const strength = clamp(Number(intensity) / 100, 0, 1);
+  const sample = new Float32Array(3);
+
+  for (let i = 0; i < targetPixels.length; i += 4) {
+    const r = targetPixels[i];
+    const g = targetPixels[i + 1];
+    const b = targetPixels[i + 2];
+
+    const rLin = srgbToLinearChannel(r);
+    const gLin = srgbToLinearChannel(g);
+    const bLin = srgbToLinearChannel(b);
+
+    trilinearSample(lut, rLin, gLin, bLin, sample);
+
+    const outR = linearToSrgbChannel(sample[0]);
+    const outG = linearToSrgbChannel(sample[1]);
+    const outB = linearToSrgbChannel(sample[2]);
+
+    out[i] = clamp(lerp(r, outR, strength), 0, 255);
+    out[i + 1] = clamp(lerp(g, outG, strength), 0, 255);
+    out[i + 2] = clamp(lerp(b, outB, strength), 0, 255);
+    out[i + 3] = targetPixels[i + 3];
+  }
+
+  return out;
+}
+
+export default function ColorGradeLutPage() {
+  const sourceInputRef = useRef(null);
+  const targetInputRef = useRef(null);
+  const compareCanvasRef = useRef(null);
+  const sourcePreviewCanvasRef = useRef(null);
+  const sourceSampleCanvasRef = useRef(null);
+  const targetCanvasRef = useRef(null);
+  const outputCanvasRef = useRef(null);
+  const fullTargetCanvasRef = useRef(null);
+  const fullOutputCanvasRef = useRef(null);
+
+  const sourceImageRef = useRef(null);
+  const targetImageRef = useRef(null);
+  const targetFilenameRef = useRef("target");
+  const targetMimeRef = useRef("image/png");
+  const targetPixelsRef = useRef(null);
+  const outputPixelsRef = useRef(null);
+  const outputImageDataRef = useRef(null);
+  const lutRef = useRef(null);
+
+  const resizeFrameRef = useRef(0);
+  const applyFrameRef = useRef(0);
+
+  const [sourceMeta, setSourceMeta] = useState("No source image loaded");
+  const [targetMeta, setTargetMeta] = useState("No target image loaded");
+  const [intensity, setIntensity] = useState(85);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isLutReady, setIsLutReady] = useState(false);
+  const [split, setSplit] = useState(55);
+  const [sourcePreviewTick, setSourcePreviewTick] = useState(0);
+  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+  const [previewSize, setPreviewSize] = useState({
+    width: DESKTOP_MAX_WIDTH,
+    height: DESKTOP_MAX_HEIGHT
+  });
+  const [isDragOverSource, setIsDragOverSource] = useState(false);
+  const [isDragOverTarget, setIsDragOverTarget] = useState(false);
+  const [statusText, setStatusText] = useState("LUT not built yet");
+
+  const applyPreviewSize = useCallback((width, height) => {
+    const compareCanvas = compareCanvasRef.current;
+    const targetCanvas = targetCanvasRef.current;
+    const outputCanvas = outputCanvasRef.current;
+
+    [compareCanvas, targetCanvas, outputCanvas].forEach((canvas) => {
+      if (!canvas) return;
+      canvas.width = width;
+      canvas.height = height;
+    });
+
+    setPreviewSize({ width, height });
+  }, []);
+
+  const drawTargetToCanvas = useCallback(() => {
+    const targetImage = targetImageRef.current;
+    const targetCanvas = targetCanvasRef.current;
+    if (!targetImage || !targetCanvas) {
+      return;
+    }
+
+    const ctx = targetCanvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) {
+      return;
+    }
+
+    ctx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+    ctx.drawImage(targetImage, 0, 0, targetCanvas.width, targetCanvas.height);
+
+    const imageData = ctx.getImageData(0, 0, targetCanvas.width, targetCanvas.height);
+    targetPixelsRef.current = imageData.data;
+    outputPixelsRef.current = new Uint8ClampedArray(imageData.data.length);
+    outputImageDataRef.current = new ImageData(
+      outputPixelsRef.current,
+      targetCanvas.width,
+      targetCanvas.height
+    );
+  }, []);
+
+  const drawInputPreview = useCallback((image, canvas) => {
+    if (!image || !canvas) {
+      return;
+    }
+
+    canvas.width = INPUT_PREVIEW_MAX_WIDTH;
+    canvas.height = INPUT_PREVIEW_MAX_HEIGHT;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      return;
+    }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const rect = getContainRect(image.width, image.height, canvas.width, canvas.height);
+    ctx.drawImage(image, rect.x, rect.y, rect.width, rect.height);
+  }, []);
+
+  const drawComparison = useCallback(() => {
+    const compareCanvas = compareCanvasRef.current;
+    const targetCanvas = targetCanvasRef.current;
+    const outputCanvas = outputCanvasRef.current;
+
+    if (!compareCanvas || !targetCanvas) {
+      return;
+    }
+
+    const ctx = compareCanvas.getContext("2d");
+    if (!ctx) {
+      return;
+    }
+
+    ctx.clearRect(0, 0, compareCanvas.width, compareCanvas.height);
+
+    if (!isLutReady || !outputCanvas) {
+      ctx.drawImage(targetCanvas, 0, 0, compareCanvas.width, compareCanvas.height);
+      return;
+    }
+
+    ctx.drawImage(outputCanvas, 0, 0, compareCanvas.width, compareCanvas.height);
+
+    const splitRatio = Number(split) / 100;
+    const splitX = Math.floor(compareCanvas.width * splitRatio);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(splitX, 0, compareCanvas.width - splitX, compareCanvas.height);
+    ctx.clip();
+    ctx.drawImage(targetCanvas, 0, 0, compareCanvas.width, compareCanvas.height);
+    ctx.restore();
+
+    ctx.save();
+    ctx.strokeStyle = "rgba(18, 21, 28, 0.6)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(splitX + 0.5, 0);
+    ctx.lineTo(splitX + 0.5, compareCanvas.height);
+    ctx.stroke();
+    ctx.restore();
+
+    drawPreviewLabels(ctx, splitX, compareCanvas.width);
+  }, [isLutReady, split]);
+
+  const applyLutToTarget = useCallback(() => {
+    const lut = lutRef.current;
+    const targetPixels = targetPixelsRef.current;
+    const outputPixels = outputPixelsRef.current;
+    const outputCanvas = outputCanvasRef.current;
+    const outputImageData = outputImageDataRef.current;
+
+    if (!lut || !targetPixels || !outputPixels || !outputCanvas || !outputImageData) {
+      return;
+    }
+
+    apply3DLUT(targetPixels, lut, intensity, outputPixels);
+
+    const ctx = outputCanvas.getContext("2d");
+    if (!ctx) {
+      return;
+    }
+
+    ctx.putImageData(outputImageData, 0, 0);
+    drawComparison();
+  }, [drawComparison, intensity]);
+
+  const scheduleApply = useCallback(() => {
+    if (applyFrameRef.current) {
+      cancelAnimationFrame(applyFrameRef.current);
+    }
+
+    applyFrameRef.current = requestAnimationFrame(() => {
+      applyFrameRef.current = 0;
+      applyLutToTarget();
+    });
+  }, [applyLutToTarget]);
+
+  const handleResize = useCallback(() => {
+    if (!targetImageRef.current || resizeFrameRef.current) {
+      return;
+    }
+
+    resizeFrameRef.current = requestAnimationFrame(() => {
+      resizeFrameRef.current = 0;
+      const targetImage = targetImageRef.current;
+      const nextSize = getPreviewSize(targetImage.width, targetImage.height);
+
+      if (
+        nextSize.width === previewSize.width &&
+        nextSize.height === previewSize.height
+      ) {
+        return;
+      }
+
+      applyPreviewSize(nextSize.width, nextSize.height);
+      drawTargetToCanvas();
+
+      if (isLutReady) {
+        scheduleApply();
+      } else {
+        drawComparison();
+      }
+    });
+  }, [applyPreviewSize, drawComparison, drawTargetToCanvas, isLutReady, previewSize, scheduleApply]);
+
+  const loadImageFromFile = useCallback((file) => {
+    return new Promise((resolve, reject) => {
+      if (!file) {
+        reject(new Error("No file provided"));
+        return;
+      }
+
+      const image = new Image();
+      image.crossOrigin = "anonymous";
+      image.decoding = "async";
+      const objectUrl = URL.createObjectURL(file);
+
+      image.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(image);
+      };
+
+      image.onerror = (error) => {
+        URL.revokeObjectURL(objectUrl);
+        reject(error);
+      };
+
+      image.src = objectUrl;
+    });
+  }, []);
+
+  const handleSourceFile = useCallback(async (file) => {
+    if (!file || isProcessing) {
+      return;
+    }
+
+    setIsProcessing(true);
+    setStatusText("Loading source image...");
+
+    try {
+      const image = await loadImageFromFile(file);
+      sourceImageRef.current = image;
+      setSourceMeta(`${file.name || "Source"} - ${image.width} x ${image.height}px`);
+      lutRef.current = null;
+      setIsLutReady(false);
+      setSourcePreviewTick((tick) => tick + 1);
+      setStatusText("LUT not built yet");
+    } catch (error) {
+      setSourceMeta("Failed to load source image");
+      setStatusText("LUT not built yet");
+      console.error("Source image load failed", error);
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [isProcessing, loadImageFromFile]);
+
+  const handleTargetFile = useCallback(async (file) => {
+    if (!file || isProcessing) {
+      return;
+    }
+
+    setIsProcessing(true);
+    setStatusText("Loading target image...");
+
+    try {
+      const image = await loadImageFromFile(file);
+      targetImageRef.current = image;
+      targetFilenameRef.current = file.name || "target";
+      targetMimeRef.current = file.type || "image/png";
+
+      const nextSize = getPreviewSize(image.width, image.height);
+      applyPreviewSize(nextSize.width, nextSize.height);
+      drawTargetToCanvas();
+      drawComparison();
+
+      setTargetMeta(`${file.name || "Target"} - ${image.width} x ${image.height}px`);
+
+      if (lutRef.current) {
+        scheduleApply();
+        setIsLutReady(true);
+        setStatusText("LUT ready");
+      }
+    } catch (error) {
+      setTargetMeta("Failed to load target image");
+      setStatusText("LUT not built yet");
+      console.error("Target image load failed", error);
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [applyPreviewSize, drawComparison, drawTargetToCanvas, isProcessing, loadImageFromFile, scheduleApply]);
+
+  const handleDownload = useCallback((extension) => {
+    if (!lutRef.current || !targetImageRef.current || isProcessing) {
+      return;
+    }
+
+    setIsProcessing(true);
+    setStatusText("Preparing download...");
+
+    requestAnimationFrame(() => {
+      try {
+        const targetImage = targetImageRef.current;
+        const fullTargetCanvas = fullTargetCanvasRef.current;
+        const fullOutputCanvas = fullOutputCanvasRef.current;
+
+        if (!fullTargetCanvas || !fullOutputCanvas) {
+          return;
+        }
+
+        fullTargetCanvas.width = targetImage.width;
+        fullTargetCanvas.height = targetImage.height;
+        fullOutputCanvas.width = targetImage.width;
+        fullOutputCanvas.height = targetImage.height;
+
+        const fullCtx = fullTargetCanvas.getContext("2d", { willReadFrequently: true });
+        const outCtx = fullOutputCanvas.getContext("2d", { willReadFrequently: true });
+
+        if (!fullCtx || !outCtx) {
+          return;
+        }
+
+        fullCtx.clearRect(0, 0, fullTargetCanvas.width, fullTargetCanvas.height);
+        fullCtx.drawImage(targetImage, 0, 0, fullTargetCanvas.width, fullTargetCanvas.height);
+
+        const imageData = fullCtx.getImageData(0, 0, fullTargetCanvas.width, fullTargetCanvas.height);
+        const output = new Uint8ClampedArray(imageData.data.length);
+        apply3DLUT(imageData.data, lutRef.current, intensity, output);
+
+        outCtx.putImageData(
+          new ImageData(output, fullOutputCanvas.width, fullOutputCanvas.height),
+          0,
+          0
+        );
+
+        const filename = targetFilenameRef.current || "target";
+        const baseName = filename.replace(/\.[^/.]+$/, "");
+        const normalized = (extension || "png").toLowerCase();
+
+        let mime = "image/png";
+        let outputExtension = "png";
+
+        if (normalized === "jpg" || normalized === "jpeg" || normalized === "peg") {
+          mime = "image/jpeg";
+          outputExtension = normalized === "jpeg" ? "jpeg" : "jpg";
+        } else if (normalized === "webp") {
+          mime = "image/webp";
+          outputExtension = "webp";
+        }
+
+        const link = document.createElement("a");
+        link.download = `${baseName}-graded.${outputExtension}`;
+        const quality = mime === "image/jpeg" || mime === "image/webp" ? 0.95 : undefined;
+        link.href = fullOutputCanvas.toDataURL(mime, quality);
+        link.click();
+        setStatusText("LUT ready");
+      } catch (error) {
+        console.error("Download failed", error);
+        setStatusText("Download failed");
+      } finally {
+        setIsProcessing(false);
+      }
+    });
+  }, [intensity, isProcessing]);
+
+  const buildLutAndApply = useCallback(async () => {
+    if (!sourceImageRef.current || !targetImageRef.current || isProcessing) {
+      return;
+    }
+
+    setIsProcessing(true);
+    setStatusText("Building 3D LUT...");
+
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+
+    try {
+      const sourceImage = sourceImageRef.current;
+      const sampleCanvas = sourceSampleCanvasRef.current;
+
+      if (!sampleCanvas) {
+        return;
+      }
+
+      const sampleSize = getSampleSize(sourceImage.width, sourceImage.height);
+      sampleCanvas.width = sampleSize.width;
+      sampleCanvas.height = sampleSize.height;
+
+      const sampleCtx = sampleCanvas.getContext("2d", { willReadFrequently: true });
+      if (!sampleCtx) {
+        return;
+      }
+
+      sampleCtx.clearRect(0, 0, sampleCanvas.width, sampleCanvas.height);
+      sampleCtx.drawImage(sourceImage, 0, 0, sampleCanvas.width, sampleCanvas.height);
+
+      const sourcePixels = sampleCtx.getImageData(0, 0, sampleCanvas.width, sampleCanvas.height).data;
+      const lut = generate3DLUT(sourcePixels, LUT_SIZE);
+
+      lutRef.current = lut;
+      setIsLutReady(true);
+      setStatusText("LUT ready");
+      scheduleApply();
+    } catch (error) {
+      setStatusText("Failed to build LUT");
+      console.error("LUT generation failed", error);
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [isProcessing, scheduleApply]);
+
+  useEffect(() => {
+    sourceSampleCanvasRef.current = document.createElement("canvas");
+    targetCanvasRef.current = document.createElement("canvas");
+    outputCanvasRef.current = document.createElement("canvas");
+    fullTargetCanvasRef.current = document.createElement("canvas");
+    fullOutputCanvasRef.current = document.createElement("canvas");
+    applyPreviewSize(DESKTOP_MAX_WIDTH, DESKTOP_MAX_HEIGHT);
+
+    return () => {
+      if (resizeFrameRef.current) {
+        cancelAnimationFrame(resizeFrameRef.current);
+      }
+      if (applyFrameRef.current) {
+        cancelAnimationFrame(applyFrameRef.current);
+      }
+    };
+  }, [applyPreviewSize]);
+
+  useEffect(() => {
+    if (!isLutReady) {
+      return;
+    }
+    scheduleApply();
+  }, [intensity, isLutReady, scheduleApply]);
+
+  useEffect(() => {
+    if (!targetImageRef.current) {
+      return;
+    }
+
+    drawComparison();
+  }, [drawComparison, split]);
+
+  useEffect(() => {
+    if (!sourceImageRef.current || !sourcePreviewCanvasRef.current) {
+      return;
+    }
+    drawInputPreview(sourceImageRef.current, sourcePreviewCanvasRef.current);
+  }, [drawInputPreview, sourcePreviewTick]);
+
+  useEffect(() => {
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [handleResize]);
+
+  const isReadyToApply = Boolean(sourceImageRef.current && targetImageRef.current);
+
+  const intensityDisplay = useMemo(() => intensity, [intensity]);
+  const splitDisplay = useMemo(() => split, [split]);
+
+  return (
+    <main className="relative mx-auto min-h-screen w-[min(1200px,92vw)] py-6 md:py-8">
+      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        <span className="absolute -left-16 -top-20 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(213,108,79,0.4),transparent_70%)]" />
+        <span className="absolute right-[-140px] top-28 h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,rgba(60,125,108,0.32),transparent_70%)]" />
+        <span className="absolute bottom-[-90px] left-[40%] h-64 w-64 rounded-full bg-[radial-gradient(circle,rgba(38,57,79,0.2),transparent_70%)]" />
+      </div>
+
+      <div className="mb-5 flex items-center gap-3">
+        <Link href="/" aria-label="GrayGlyph Home" className="inline-flex items-center">
+          <NextImage
+            src="/assets/grayglyph-logo.png"
+            alt="GrayGlyph logo"
+            width={180}
+            height={40}
+            className="h-8 w-auto object-contain md:h-9"
+            priority
+          />
+        </Link>
+      </div>
+
+      <header className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+        <section className="glass-panel animate-rise p-5 md:p-6">
+          <h1 className="font-serifDisplay text-4xl leading-tight text-ink md:text-5xl">
+            3D LUT Color Grade Transfer
+          </h1>
+          <p className="mt-3 text-sm leading-relaxed text-ink-soft md:text-base">
+            Match the look of one photo onto another in seconds. Load a reference image to capture its color grade, then apply that grade to your target. Everything runs locally in your browser with zero uploads.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2.5">
+            <Link
+              href="/editor"
+              className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2 font-semibold text-ink transition hover:bg-gray-50 hover:border-black/20"
+            >
+              Advanced Photo Editor
+            </Link>
+            <a
+              className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[#f5b700] px-4 py-2 font-semibold text-[#1b1f27] transition hover:brightness-95"
+              href="https://github.com/Amal-kphilip/GrayGlyph"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Star on GitHub
+            </a>
+          </div>
+        </section>
+
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
+          <article className="glass-soft-panel animate-rise p-4" style={{ animationDelay: "40ms" }}>
+            <h2 className="text-base font-semibold">Privacy first</h2>
+            <p className="mt-1 text-sm text-muted">Images stay on your device. Nothing is uploaded.</p>
+          </article>
+          <article className="glass-soft-panel animate-rise p-4" style={{ animationDelay: "80ms" }}>
+            <h2 className="text-base font-semibold">Film-grade look</h2>
+            <p className="mt-1 text-sm text-muted">Build a 3D LUT from your reference colors.</p>
+          </article>
+          <article className="glass-soft-panel animate-rise p-4" style={{ animationDelay: "120ms" }}>
+            <h2 className="text-base font-semibold">Instant preview</h2>
+            <p className="mt-1 text-sm text-muted">Toggle before and after with a single click.</p>
+          </article>
+          <article className="glass-soft-panel animate-rise p-4" style={{ animationDelay: "160ms" }}>
+            <h2 className="text-base font-semibold">Non-destructive</h2>
+            <p className="mt-1 text-sm text-muted">Original pixels remain untouched.</p>
+          </article>
+        </section>
+      </header>
+
+      <section className="mt-4 grid gap-4 lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start">
+        <div className="order-2 space-y-4 lg:order-1">
+          <section className="glass-panel animate-rise p-5">
+            <div>
+              <h2 className="text-xl font-semibold">Inputs</h2>
+              <p className="text-sm text-muted">Add a color reference and the photo you want to recolor.</p>
+            </div>
+
+            <input
+              ref={sourceInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(event) => {
+                const [file] = event.target.files || [];
+                handleSourceFile(file);
+                event.target.value = "";
+              }}
+            />
+
+            <button
+              type="button"
+              onClick={() => sourceInputRef.current?.click()}
+              onDragOver={(event) => {
+                event.preventDefault();
+                setIsDragOverSource(true);
+              }}
+              onDragLeave={() => setIsDragOverSource(false)}
+              onDrop={(event) => {
+                event.preventDefault();
+                setIsDragOverSource(false);
+                const [file] = event.dataTransfer.files || [];
+                handleSourceFile(file);
+              }}
+              className={`mt-4 grid w-full place-items-center rounded-2xl border border-dashed px-4 py-6 text-center transition ${isDragOverSource
+                ? "border-accent bg-[rgba(213,108,79,0.1)]"
+                : "border-black/25 bg-white/55 hover:bg-white/70"
+                }`}
+            >
+              <div>
+                <strong className="block text-lg font-semibold text-ink">Source Image (Color Reference)</strong>
+                <span className="text-sm text-ink-soft">Drop or click to browse</span>
+              </div>
+            </button>
+
+            <p className="mt-2 text-xs text-muted">{sourceMeta}</p>
+            {sourceImageRef.current && (
+              <canvas
+                ref={sourcePreviewCanvasRef}
+                className="canvas-frame mt-3 w-full"
+                style={{ aspectRatio: `${INPUT_PREVIEW_MAX_WIDTH}/${INPUT_PREVIEW_MAX_HEIGHT}` }}
+              />
+            )}
+
+            <input
+              ref={targetInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(event) => {
+                const [file] = event.target.files || [];
+                handleTargetFile(file);
+                event.target.value = "";
+              }}
+            />
+
+            <button
+              type="button"
+              onClick={() => targetInputRef.current?.click()}
+              onDragOver={(event) => {
+                event.preventDefault();
+                setIsDragOverTarget(true);
+              }}
+              onDragLeave={() => setIsDragOverTarget(false)}
+              onDrop={(event) => {
+                event.preventDefault();
+                setIsDragOverTarget(false);
+                const [file] = event.dataTransfer.files || [];
+                handleTargetFile(file);
+              }}
+              className={`mt-4 grid w-full place-items-center rounded-2xl border border-dashed px-4 py-6 text-center transition ${isDragOverTarget
+                ? "border-accent bg-[rgba(213,108,79,0.1)]"
+                : "border-black/25 bg-white/55 hover:bg-white/70"
+                }`}
+            >
+              <div>
+                <strong className="block text-lg font-semibold text-ink">Target Image</strong>
+                <span className="text-sm text-ink-soft">Drop or click to browse</span>
+              </div>
+            </button>
+
+            <p className="mt-2 text-xs text-muted">{targetMeta}</p>
+          </section>
+        </div>
+
+        <div className="order-1 space-y-4 lg:order-2">
+          <section className="glass-panel animate-rise p-5">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-semibold">Preview</h2>
+              <p className="text-sm text-muted">Toggle before and after to compare.</p>
+            </div>
+            {isLutReady && (
+              <div className="flex items-center gap-2 text-sm text-muted">
+                <span>Split</span>
+                <output>{splitDisplay}</output>
+              </div>
+            )}
+          </div>
+
+          <div className="relative">
+            <canvas
+              ref={compareCanvasRef}
+              className="canvas-frame w-full"
+              style={{ aspectRatio: `${previewSize.width}/${previewSize.height}` }}
+            />
+            {!targetImageRef.current && (
+              <div className="absolute inset-0 grid place-items-center rounded-2xl border border-dashed border-black/15 bg-white/70 text-sm text-muted">
+                Load a target image to preview the grade.
+              </div>
+            )}
+            {targetImageRef.current && isLutReady && (
+              <div className="absolute bottom-2 left-2 right-2 rounded-full border border-black/10 bg-white/85 px-3 py-2 backdrop-blur-md md:bottom-3 md:left-3 md:right-3">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={split}
+                  onChange={(event) => setSplit(Number(event.target.value))}
+                  className="range-input"
+                  style={{ background: getSliderBackground(split, 0, 100) }}
+                  disabled={!isLutReady}
+                />
+              </div>
+            )}
+          </div>
+          </section>
+
+          <section className="glass-panel animate-rise p-5" style={{ animationDelay: "90ms" }}>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-semibold">Grade Controls</h2>
+                <p className="text-sm text-muted">Blend the LUT result with the original.</p>
+              </div>
+              <span className="text-xs font-medium text-ink-soft">{statusText}</span>
+            </div>
+
+            <label className="mt-4 grid grid-cols-[1fr_auto] items-center gap-2">
+              <span className="text-sm">Intensity</span>
+              <output className="font-serifDisplay text-lg text-ink-soft">{intensityDisplay}</output>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={intensity}
+                onChange={(event) => setIntensity(Number(event.target.value))}
+                className="range-input col-span-2"
+                style={{ background: getSliderBackground(intensity, 0, 100) }}
+                disabled={!isLutReady}
+              />
+            </label>
+
+            <button
+              type="button"
+              onClick={buildLutAndApply}
+              disabled={!isReadyToApply || isProcessing}
+              className="btn-primary mt-4 w-full disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isProcessing ? "Processing..." : "Apply Color Grade"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsDownloadOpen(true)}
+              disabled={!isLutReady || isProcessing}
+              className="btn-ghost mt-3 w-full disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Download Image
+            </button>
+          </section>
+        </div>
+      </section>
+
+      {isDownloadOpen && (
+        <div className="fixed inset-0 z-40 grid place-items-center bg-black/40 px-4">
+          <div className="glass-panel w-full max-w-md p-5">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold">Choose File Format</h3>
+                <p className="text-sm text-muted">Select an extension for your download.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsDownloadOpen(false)}
+                className="text-xs font-medium text-ink-soft underline decoration-transparent underline-offset-4 transition hover:text-ink hover:decoration-ink/30"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              {["png", "jpg", "jpeg", "webp"].map((ext) => (
+                <button
+                  key={ext}
+                  type="button"
+                  className="btn-ghost py-3 text-base font-semibold"
+                  onClick={() => {
+                    setIsDownloadOpen(false);
+                    handleDownload(ext);
+                  }}
+                >
+                  {ext.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </main>
+  );
+}

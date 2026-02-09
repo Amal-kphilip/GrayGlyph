@@ -678,6 +678,13 @@ export default function HomePage() {
               <span>✨</span> Advanced Photo Editor
             </Link>
 
+            <Link
+              href="/color-grade-lut"
+              className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2 font-semibold text-ink transition hover:bg-gray-50 hover:border-black/20"
+            >
+              3D LUT Color Grade Transfer
+            </Link>
+
             <a
               className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[#f5b700] px-4 py-2 font-semibold text-[#1b1f27] transition hover:brightness-95"
               href="https://github.com/Amal-kphilip/GrayGlyph"
