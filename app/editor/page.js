@@ -349,7 +349,6 @@ export default function EditorPage() {
                     <header className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
                         <section className="glass-panel animate-rise p-5 md:p-8 flex flex-col justify-center">
                             <div className="flex items-center gap-2 mb-4">
-                                <span className="px-2 py-0.5 rounded text-xs font-bold uppercase bg-blue-100 text-blue-700 tracking-wide">New</span>
                                 <span className="text-sm font-medium text-ink-soft">Browser-based Editor</span>
                             </div>
                             <h1 className="font-serifDisplay text-4xl leading-tight text-ink md:text-5xl lg:text-6xl mb-6">
