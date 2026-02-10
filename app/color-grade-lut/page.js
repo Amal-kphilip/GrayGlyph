@@ -882,22 +882,6 @@ export default function ColorGradeLutPage() {
           <p className="mt-3 text-sm leading-relaxed text-ink-soft md:text-base">
             Match the look of one photo onto another in seconds. Load a reference image to capture its color grade, then apply that grade to your target. Everything runs locally in your browser with zero uploads.
           </p>
-          <div className="mt-5 flex flex-wrap gap-2.5">
-            <Link
-              href="/editor"
-              className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2 font-semibold text-ink transition hover:bg-gray-50 hover:border-black/20"
-            >
-              Advanced Photo Editor
-            </Link>
-            <a
-              className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[#f5b700] px-4 py-2 font-semibold text-[#1b1f27] transition hover:brightness-95"
-              href="https://github.com/Amal-kphilip/GrayGlyph"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Star on GitHub
-            </a>
-          </div>
         </section>
 
         <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2">

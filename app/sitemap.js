@@ -10,5 +10,10 @@ export default function sitemap() {
             lastModified: new Date(),
             priority: 0.9,
         },
+        {
+            url: 'https://grayglyph.netlify.app/color-grade-lut',
+            lastModified: new Date(),
+            priority: 0.9,
+        },
     ];
 }

@@ -18,15 +18,17 @@ const cormorant = Cormorant_Garamond({
 export const metadata = {
   metadataBase: new URL("https://grayglyph.netlify.app"),
   title: {
-    default: "GrayGlyph - Free Image Editor & Grayscale Converter",
+    default: "GrayGlyph - Free Grayscale Converter, Photo Editor & Color Grading Tool",
     template: "%s | GrayGlyph"
   },
   description:
-    "Free online photo editor and grayscale converter. Professional color grading, curves, and presets. Privacy-first, browser-based processing.",
+    "Free browser-based image tools for grayscale conversion, photo editing, and color grade transfer. No uploads. Full privacy.",
   keywords: [
     "image editor online",
     "photo editor free",
     "grayscale converter",
+    "color grade transfer",
+    "color grading online",
     "color grading tool",
     "curves adjustment online",
     "browser based photo editor"
@@ -36,8 +38,8 @@ export const metadata = {
     canonical: "/"
   },
   openGraph: {
-    title: "GrayGlyph - Free Image Editor & Grayscale Converter",
-    description: "Professional photo editing tools in your browser. Curves, color grading, and presets. No upload required.",
+    title: "GrayGlyph - Free Grayscale Converter, Photo Editor & Color Grading Tool",
+    description: "Free browser-based image tools for grayscale conversion, photo editing, and color grade transfer. No uploads. Full privacy.",
     url: "https://grayglyph.netlify.app/",
     type: "website",
     siteName: "GrayGlyph",
@@ -53,8 +55,8 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "GrayGlyph - Free Image Editor & Grayscale Converter",
-    description: "Professional photo editing tools in your browser. Curves, color grading, and presets. No upload required.",
+    title: "GrayGlyph - Free Grayscale Converter, Photo Editor & Color Grading Tool",
+    description: "Free browser-based image tools for grayscale conversion, photo editing, and color grade transfer. No uploads. Full privacy.",
     images: ["/assets/grayglyph-logo.png"]
   },
   robots: {
@@ -69,9 +71,9 @@ export const metadata = {
     }
   },
   icons: {
-    icon: [{ url: "/assets/icon.jpg", type: "image/jpeg" }],
-    shortcut: ["/assets/icon.jpg"],
-    apple: "/assets/icon.jpg"
+    icon: [{ url: "/assets/icon.png", type: "image/png" }],
+    shortcut: ["/assets/icon.png"],
+    apple: "/assets/icon.png"
   },
   verification: {
     google: "google-site-verification-code", // Placeholder
