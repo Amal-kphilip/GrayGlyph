@@ -37,7 +37,7 @@ If you are searching for an online grayscale converter, a browser photo editor, 
 
 ## Demo
 
-Live Demo: https://yourdomain.com
+Live Demo: https://grayglyph.netlify.app/
 
 ## Contributing
 
