@@ -265,11 +265,14 @@ body {
   .btn-ghost {
     @apply inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold tracking-wide focus-visible:outline-none focus-visible:ring-2;
     position: relative;
+    overflow: hidden;
     color: var(--text-primary);
-    background:
-      linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, #ffffff 0%), color-mix(in srgb, var(--accent-soft) 78%, #ffffff 0%)) left center / 0% 100% no-repeat,
-      linear-gradient(135deg, rgba(30, 41, 59, 0.46), rgba(15, 23, 42, 0.6));
-    border: 1px solid var(--glass-border-strong);
+    background-color: rgba(15, 23, 42, 0.34);
+    background-image: linear-gradient(120deg, #3b82f6, #6366f1);
+    background-repeat: no-repeat;
+    background-position: left top;
+    background-size: 0% 100%;
+    border: 1px solid rgba(148, 163, 184, 0.45);
     box-shadow:
       0 10px 22px rgba(2, 6, 23, 0.32),
       inset 0 1px 0 rgba(255, 255, 255, 0.08);
@@ -277,14 +280,20 @@ body {
       color 350ms ease,
       background-size 350ms ease,
       border-color 350ms ease,
-      box-shadow 350ms ease;
+      box-shadow 350ms ease,
+      transform 220ms ease;
   }
 
   .btn-primary:hover,
-  .btn-ghost:hover {
+  .btn-ghost:hover,
+  .btn-primary:focus-visible,
+  .btn-ghost:focus-visible,
+  .btn-primary:active,
+  .btn-ghost:active {
     color: var(--btn-primary-text);
-    background-size: 100% 100%, 100% 100%;
-    border-color: color-mix(in srgb, var(--accent) 90%, transparent);
+    background-size: 100% 100%;
+    border-color: rgba(96, 165, 250, 0.8);
+    transform: translateY(-1px);
     box-shadow:
       0 14px 30px rgba(59, 130, 246, 0.3),
       inset 0 1px 0 rgba(255, 255, 255, 0.18);
@@ -298,7 +307,7 @@ body {
 
   .btn-primary:focus-visible,
   .btn-ghost:focus-visible {
-    --tw-ring-color: color-mix(in srgb, var(--accent) 38%, transparent);
+    --tw-ring-color: rgba(96, 165, 250, 0.38);
   }
 
   .feature-card {
