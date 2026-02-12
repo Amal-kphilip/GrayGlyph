@@ -90,28 +90,29 @@ export default function CropOverlay({ crop, onCropChange, imageRef, containerRef
         top: display.y + (currentCrop.y * display.h),
         width: currentCrop.width * display.w,
         height: currentCrop.height * display.h,
+        boxShadow: "0 0 0 9999px var(--crop-mask)"
     };
 
     return (
-        <div className="absolute border-2 border-white shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] pointer-events-auto" style={style}>
+        <div className="absolute pointer-events-auto border-2 border-[var(--crop-stroke)]" style={style}>
             {/* Grid */}
             <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none opacity-50">
-                <div className="border-r border-b border-white/30"></div>
-                <div className="border-r border-b border-white/30"></div>
-                <div className="border-b border-white/30"></div>
+                <div className="border-b border-r border-[var(--crop-grid)]"></div>
+                <div className="border-b border-r border-[var(--crop-grid)]"></div>
+                <div className="border-b border-[var(--crop-grid)]"></div>
 
-                <div className="border-r border-b border-white/30"></div>
-                <div className="border-r border-b border-white/30"></div>
-                <div className="border-b border-white/30"></div>
+                <div className="border-b border-r border-[var(--crop-grid)]"></div>
+                <div className="border-b border-r border-[var(--crop-grid)]"></div>
+                <div className="border-b border-[var(--crop-grid)]"></div>
 
-                <div className="border-r border-white/30"></div>
-                <div className="border-r border-white/30"></div>
+                <div className="border-r border-[var(--crop-grid)]"></div>
+                <div className="border-r border-[var(--crop-grid)]"></div>
                 <div></div>
             </div>
 
             {/* Handles */}
-            <div className="absolute -left-2 -top-2 w-4 h-4 bg-white border border-gray-400 cursor-nw-resize" onMouseDown={(e) => handleMouseDown(e, 'tl')} />
-            <div className="absolute -right-2 -bottom-2 w-4 h-4 bg-white border border-gray-400 cursor-se-resize" onMouseDown={(e) => handleMouseDown(e, 'br')} />
+            <div className="absolute -left-2 -top-2 h-4 w-4 cursor-nw-resize border border-[var(--crop-handle-border)] bg-[var(--crop-handle-bg)]" onMouseDown={(e) => handleMouseDown(e, 'tl')} />
+            <div className="absolute -bottom-2 -right-2 h-4 w-4 cursor-se-resize border border-[var(--crop-handle-border)] bg-[var(--crop-handle-bg)]" onMouseDown={(e) => handleMouseDown(e, 'br')} />
             {/* Add more handles as needed */}
         </div>
     );

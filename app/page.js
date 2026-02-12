@@ -32,7 +32,7 @@ const toolsData = {
       "@type": "ListItem",
       position: 1,
       name: "Image to Grayscale & Black and White",
-      url: "https://grayglyph.netlify.app/#grayscale-tool"
+      url: "https://grayglyph.netlify.app/grayscale"
     },
     {
       "@type": "ListItem",

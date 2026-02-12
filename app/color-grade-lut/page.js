@@ -1,8 +1,8 @@
 "use client";
 
-import NextImage from "next/image";
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import FeatureNavbar from "../components/FeatureNavbar";
+import FeatureHero from "../components/FeatureHero";
 
 const DESKTOP_MAX_WIDTH = 960;
 const DESKTOP_MAX_HEIGHT = 540;
@@ -90,7 +90,26 @@ function getContainRect(srcWidth, srcHeight, destWidth, destHeight) {
 
 function getSliderBackground(value, min, max) {
   const percentage = ((value - min) / (max - min)) * 100;
-  return `linear-gradient(to right, #1672f3 ${percentage}%, rgba(18, 21, 28, 0.12) ${percentage}%)`;
+  return `linear-gradient(to right, var(--accent) ${percentage}%, var(--range-track) ${percentage}%)`;
+}
+
+function getCanvasThemeColors() {
+  if (typeof window === "undefined") {
+    return {
+      badgeBg: "transparent",
+      badgeBorder: "transparent",
+      badgeText: "currentColor",
+      splitLine: "currentColor"
+    };
+  }
+
+  const styles = getComputedStyle(document.documentElement);
+  return {
+    badgeBg: styles.getPropertyValue("--canvas-label-bg").trim() || styles.getPropertyValue("--surface-overlay").trim(),
+    badgeBorder: styles.getPropertyValue("--canvas-label-border").trim() || styles.getPropertyValue("--border-primary").trim(),
+    badgeText: styles.getPropertyValue("--canvas-label-text").trim() || styles.getPropertyValue("--text-primary").trim(),
+    splitLine: styles.getPropertyValue("--canvas-divider").trim() || styles.getPropertyValue("--border-primary").trim()
+  };
 }
 
 function srgbToLinearChannel(value) {
@@ -128,15 +147,16 @@ function lutIndex(size, r, g, b) {
 function drawBadge(ctx, text, x, y, height, radius, alignRight = false) {
   const fontSize = 12;
   ctx.save();
-  ctx.font = `600 ${fontSize}px Sora, sans-serif`;
+  ctx.font = `600 ${fontSize}px Inter, sans-serif`;
   ctx.textBaseline = "middle";
 
   const textWidth = ctx.measureText(text).width;
   const width = textWidth + 22;
   const drawX = alignRight ? x - width : x;
 
-  ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
-  ctx.strokeStyle = "rgba(18, 21, 28, 0.2)";
+  const colors = getCanvasThemeColors();
+  ctx.fillStyle = colors.badgeBg;
+  ctx.strokeStyle = colors.badgeBorder;
   ctx.lineWidth = 1;
 
   ctx.beginPath();
@@ -153,7 +173,7 @@ function drawBadge(ctx, text, x, y, height, radius, alignRight = false) {
   ctx.fill();
   ctx.stroke();
 
-  ctx.fillStyle = "rgba(18, 21, 28, 0.8)";
+  ctx.fillStyle = colors.badgeText;
   ctx.fillText(text, drawX + 11, y + height / 2);
   ctx.restore();
 }
@@ -528,7 +548,7 @@ export default function ColorGradeLutPage() {
     ctx.restore();
 
     ctx.save();
-    ctx.strokeStyle = "rgba(18, 21, 28, 0.6)";
+    ctx.strokeStyle = getCanvasThemeColors().splitLine;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(splitX + 0.5, 0);
@@ -895,242 +915,212 @@ export default function ColorGradeLutPage() {
   const intensityDisplay = intensity;
 
   return (
-    <main className="relative mx-auto min-h-screen w-[min(1200px,92vw)] py-6 md:py-8">
-      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <span className="absolute -left-16 -top-20 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(213,108,79,0.4),transparent_70%)]" />
-        <span className="absolute right-[-140px] top-28 h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,rgba(60,125,108,0.32),transparent_70%)]" />
-        <span className="absolute bottom-[-90px] left-[40%] h-64 w-64 rounded-full bg-[radial-gradient(circle,rgba(38,57,79,0.2),transparent_70%)]" />
-      </div>
+    <main className="page-shell">
+      <FeatureNavbar
+        links={[
+          { href: "/grayscale", label: "Grayscale" },
+          { href: "/editor", label: "Photo Editor" }
+        ]}
+      />
 
-      <div className="mb-5 flex items-center gap-3">
-        <Link href="/" aria-label="GrayGlyph Home" className="inline-flex items-center">
-          <NextImage
-            src="/assets/grayglyph-logo.png"
-            alt="GrayGlyph logo"
-            width={180}
-            height={40}
-            className="h-8 w-auto object-contain md:h-9"
-            priority
-          />
-        </Link>
-      </div>
+      <section className="section-gap">
+        <FeatureHero
+          label="CINEMATIC 3D LUT WORKFLOW"
+          title="Transfer Color Grade. Instantly. In Your Browser."
+          description="Match the look of one photo to another using high-fidelity 3D LUT color mapping. No uploads."
+          ctaLabel="Transfer Color Grade"
+          ctaHref="#transfer-workspace"
+        />
+      </section>
 
-      <header className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
-        <section className="glass-panel animate-rise p-5 md:p-6">
-          <h1 className="font-serifDisplay text-4xl leading-tight text-ink md:text-5xl">
-            3D LUT Color Grade Transfer
-          </h1>
-          <p className="mt-3 text-sm leading-relaxed text-ink-soft md:text-base">
-            Match the look of one photo onto another in seconds. Load a reference image to capture its color grade, then apply that grade to your target. Everything runs locally in your browser with zero uploads.
-          </p>
-        </section>
-
-        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
-          <article className="glass-soft-panel animate-rise p-4" style={{ animationDelay: "40ms" }}>
-            <h2 className="text-base font-semibold">Privacy first</h2>
-            <p className="mt-1 text-sm text-muted">Images stay on your device. Nothing is uploaded.</p>
-          </article>
-          <article className="glass-soft-panel animate-rise p-4" style={{ animationDelay: "80ms" }}>
-            <h2 className="text-base font-semibold">Film-grade look</h2>
-            <p className="mt-1 text-sm text-muted">Build a 3D LUT from your reference colors.</p>
-          </article>
-          <article className="glass-soft-panel animate-rise p-4" style={{ animationDelay: "120ms" }}>
-            <h2 className="text-base font-semibold">Instant preview</h2>
-            <p className="mt-1 text-sm text-muted">Toggle before and after with a single click.</p>
-          </article>
-          <article className="glass-soft-panel animate-rise p-4" style={{ animationDelay: "160ms" }}>
-            <h2 className="text-base font-semibold">Non-destructive</h2>
-            <p className="mt-1 text-sm text-muted">Original pixels remain untouched.</p>
-          </article>
-        </section>
-      </header>
-
-      <section className="mt-4 grid gap-4 lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start">
-        <div className="order-2 space-y-4 lg:order-1">
-          <section className="glass-panel animate-rise p-5">
-            <div>
-              <h2 className="text-xl font-semibold">Inputs</h2>
-              <p className="text-sm text-muted">Add a color reference and the photo you want to recolor.</p>
-            </div>
-
-            <input
-              ref={sourceInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(event) => {
-                const [file] = event.target.files || [];
-                handleSourceFile(file);
-                event.target.value = "";
-              }}
-            />
-
-            <button
-              type="button"
-              onClick={() => sourceInputRef.current?.click()}
-              onDragOver={(event) => {
-                event.preventDefault();
-                setIsDragOverSource(true);
-              }}
-              onDragLeave={() => setIsDragOverSource(false)}
-              onDrop={(event) => {
-                event.preventDefault();
-                setIsDragOverSource(false);
-                const [file] = event.dataTransfer.files || [];
-                handleSourceFile(file);
-              }}
-              className={`mt-4 grid w-full place-items-center rounded-2xl border border-dashed px-4 py-6 text-center transition ${isDragOverSource
-                ? "border-accent bg-[rgba(213,108,79,0.1)]"
-                : "border-black/25 bg-white/55 hover:bg-white/70"
-                }`}
-            >
+      <section id="transfer-workspace" className="section-gap">
+        <div className="glass-panel animate-rise p-5 md:p-6">
+          <div className="grid gap-6 lg:grid-cols-[390px_minmax(0,1fr)] lg:items-start">
+            <div className="space-y-4">
               <div>
-                <strong className="block text-lg font-semibold text-ink">Source Image (Color Reference)</strong>
-                <span className="text-sm text-ink-soft">Drop or click to browse</span>
+                <h2 className="text-3xl">Inputs</h2>
+                <p className="text-sm text-muted">Add a color reference and target image to build and apply a LUT.</p>
               </div>
-            </button>
 
-            <p className="mt-2 text-xs text-muted">{sourceMeta}</p>
-            {sourceImageRef.current && (
-              <canvas
-                ref={sourcePreviewCanvasRef}
-                className="canvas-frame mt-3 w-full"
-                style={{ aspectRatio: `${INPUT_PREVIEW_MAX_WIDTH}/${INPUT_PREVIEW_MAX_HEIGHT}` }}
-              />
-            )}
-
-            <input
-              ref={targetInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(event) => {
-                const [file] = event.target.files || [];
-                handleTargetFile(file);
-                event.target.value = "";
-              }}
-            />
-
-            <button
-              type="button"
-              onClick={() => targetInputRef.current?.click()}
-              onDragOver={(event) => {
-                event.preventDefault();
-                setIsDragOverTarget(true);
-              }}
-              onDragLeave={() => setIsDragOverTarget(false)}
-              onDrop={(event) => {
-                event.preventDefault();
-                setIsDragOverTarget(false);
-                const [file] = event.dataTransfer.files || [];
-                handleTargetFile(file);
-              }}
-              className={`mt-4 grid w-full place-items-center rounded-2xl border border-dashed px-4 py-6 text-center transition ${isDragOverTarget
-                ? "border-accent bg-[rgba(213,108,79,0.1)]"
-                : "border-black/25 bg-white/55 hover:bg-white/70"
-                }`}
-            >
-              <div>
-                <strong className="block text-lg font-semibold text-ink">Target Image</strong>
-                <span className="text-sm text-ink-soft">Drop or click to browse</span>
-              </div>
-            </button>
-
-            <p className="mt-2 text-xs text-muted">{targetMeta}</p>
-          </section>
-        </div>
-
-        <div className="order-1 space-y-4 lg:order-2">
-          <section className="glass-panel animate-rise p-5">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-xl font-semibold">Preview</h2>
-              <p className="text-sm text-muted">Toggle before and after to compare.</p>
-            </div>
-            {isLutReady && (
-              <div className="flex items-center gap-2 text-sm text-muted">
-                <span>Split</span>
-                <output ref={splitValueRef}>{splitRef.current}</output>
-              </div>
-            )}
-          </div>
-
-          <div className="relative">
-            <canvas
-              ref={compareCanvasRef}
-              className="canvas-frame w-full"
-              style={{ aspectRatio: `${previewSize.width}/${previewSize.height}` }}
-            />
-            {!targetImageRef.current && (
-              <div className="absolute inset-0 grid place-items-center rounded-2xl border border-dashed border-black/15 bg-white/70 text-sm text-muted">
-                Load a target image to preview the grade.
-              </div>
-            )}
-            {targetImageRef.current && isLutReady && (
-              <div className="absolute bottom-2 left-2 right-2 rounded-full border border-black/10 bg-white/85 px-3 py-2 backdrop-blur-md md:bottom-3 md:left-3 md:right-3">
-                <input
-                  ref={splitInputRef}
-                  type="range"
-                  min="0"
-                  max="100"
-                  defaultValue={splitRef.current}
-                  onInput={handleSplitInput}
-                  className="range-input"
-                  style={{ background: getSliderBackground(splitRef.current, 0, 100) }}
-                  disabled={!isLutReady}
-                />
-              </div>
-            )}
-          </div>
-          </section>
-
-          <section className="glass-panel animate-rise p-5" style={{ animationDelay: "90ms" }}>
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-semibold">Grade Controls</h2>
-                <p className="text-sm text-muted">Blend the LUT result with the original.</p>
-              </div>
-              <span className="text-xs font-medium text-ink-soft">{statusText}</span>
-            </div>
-
-            <label className="mt-4 grid grid-cols-[1fr_auto] items-center gap-2">
-              <span className="text-sm">Intensity</span>
-              <output className="font-serifDisplay text-lg text-ink-soft">{intensityDisplay}</output>
               <input
-                type="range"
-                min="0"
-                max="100"
-                value={intensity}
-                onChange={(event) => setIntensity(Number(event.target.value))}
-                className="range-input col-span-2"
-                style={{ background: getSliderBackground(intensity, 0, 100) }}
-                disabled={!isLutReady}
+                ref={sourceInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(event) => {
+                  const [file] = event.target.files || [];
+                  handleSourceFile(file);
+                  event.target.value = "";
+                }}
               />
-            </label>
 
-            <button
-              type="button"
-              onClick={buildLutAndApply}
-              disabled={!isReadyToApply || isProcessing}
-              className="btn-primary mt-4 w-full disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isProcessing ? "Processing..." : "Apply Color Grade"}
-            </button>
+              <button
+                type="button"
+                onClick={() => sourceInputRef.current?.click()}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  setIsDragOverSource(true);
+                }}
+                onDragLeave={() => setIsDragOverSource(false)}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  setIsDragOverSource(false);
+                  const [file] = event.dataTransfer.files || [];
+                  handleSourceFile(file);
+                }}
+                className={`grid min-h-40 w-full place-items-center rounded-3xl border border-dashed px-5 py-8 text-center transition ${isDragOverSource
+                  ? "dropzone-active"
+                  : "border-[var(--border-primary)] bg-[var(--surface-glass)] hover:bg-[var(--surface-overlay)]"
+                  }`}
+              >
+                <div>
+                  <strong className="block text-lg font-semibold text-ink">Source Image (Color Reference)</strong>
+                  <span className="text-sm text-ink-soft">Drop or click to browse</span>
+                </div>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setIsDownloadOpen(true)}
-              disabled={!isLutReady || isProcessing}
-              className="btn-ghost mt-3 w-full disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              Download Image
-            </button>
-          </section>
+              <p className="text-xs text-muted">{sourceMeta}</p>
+              {sourceImageRef.current && (
+                <canvas
+                  ref={sourcePreviewCanvasRef}
+                  className="canvas-frame w-full"
+                  style={{ aspectRatio: `${INPUT_PREVIEW_MAX_WIDTH}/${INPUT_PREVIEW_MAX_HEIGHT}` }}
+                />
+              )}
+
+              <input
+                ref={targetInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(event) => {
+                  const [file] = event.target.files || [];
+                  handleTargetFile(file);
+                  event.target.value = "";
+                }}
+              />
+
+              <button
+                type="button"
+                onClick={() => targetInputRef.current?.click()}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  setIsDragOverTarget(true);
+                }}
+                onDragLeave={() => setIsDragOverTarget(false)}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  setIsDragOverTarget(false);
+                  const [file] = event.dataTransfer.files || [];
+                  handleTargetFile(file);
+                }}
+                className={`grid min-h-40 w-full place-items-center rounded-3xl border border-dashed px-5 py-8 text-center transition ${isDragOverTarget
+                  ? "dropzone-active"
+                  : "border-[var(--border-primary)] bg-[var(--surface-glass)] hover:bg-[var(--surface-overlay)]"
+                  }`}
+              >
+                <div>
+                  <strong className="block text-lg font-semibold text-ink">Target Image</strong>
+                  <span className="text-sm text-ink-soft">Drop or click to browse</span>
+                </div>
+              </button>
+
+              <p className="text-xs text-muted">{targetMeta}</p>
+            </div>
+
+            <div className="space-y-4">
+              <section className="rounded-3xl border border-[var(--border-primary)] bg-[var(--surface-glass)] p-4 backdrop-blur-xl">
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-3xl">Live Preview</h2>
+                    <p className="text-sm text-muted">Toggle before and after to compare.</p>
+                  </div>
+                  {isLutReady && (
+                    <div className="flex items-center gap-2 text-sm text-muted">
+                      <span>Split</span>
+                      <output ref={splitValueRef}>{splitRef.current}</output>
+                    </div>
+                  )}
+                </div>
+
+                <div className="relative">
+                  <canvas
+                    ref={compareCanvasRef}
+                    className="canvas-frame w-full"
+                    style={{ aspectRatio: `${previewSize.width}/${previewSize.height}` }}
+                  />
+                  {!targetImageRef.current && (
+                    <div className="absolute inset-0 grid place-items-center rounded-2xl border border-dashed border-[var(--border-primary)] bg-[var(--surface-overlay)] text-sm text-muted">
+                      Load a target image to preview the grade.
+                    </div>
+                  )}
+                  {targetImageRef.current && isLutReady && (
+                    <div className="absolute bottom-3 left-3 right-3 bottom-overlay">
+                      <input
+                        ref={splitInputRef}
+                        type="range"
+                        min="0"
+                        max="100"
+                        defaultValue={splitRef.current}
+                        onInput={handleSplitInput}
+                        className="range-input"
+                        style={{ background: getSliderBackground(splitRef.current, 0, 100) }}
+                        disabled={!isLutReady}
+                      />
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              <section className="rounded-3xl border border-[var(--border-primary)] bg-[var(--surface-glass)] p-4 backdrop-blur-xl">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="text-2xl">Controls</h3>
+                    <p className="text-sm text-muted">Blend the LUT result with the original.</p>
+                  </div>
+                  <span className="text-xs font-medium text-ink-soft">{statusText}</span>
+                </div>
+
+                <label className="mt-4 grid grid-cols-[1fr_auto] items-center gap-2">
+                  <span className="text-sm">Intensity</span>
+                  <output className="font-heading text-lg text-ink-soft">{intensityDisplay}</output>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={intensity}
+                    onChange={(event) => setIntensity(Number(event.target.value))}
+                    className="range-input col-span-2"
+                    style={{ background: getSliderBackground(intensity, 0, 100) }}
+                    disabled={!isLutReady}
+                  />
+                </label>
+
+                <button
+                  type="button"
+                  onClick={buildLutAndApply}
+                  disabled={!isReadyToApply || isProcessing}
+                  className="btn-primary mt-5 w-full py-3 text-base disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isProcessing ? "Processing..." : "Apply Color Grade"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsDownloadOpen(true)}
+                  disabled={!isLutReady || isProcessing}
+                  className="btn-ghost mt-3 w-full disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Download Image
+                </button>
+              </section>
+            </div>
+          </div>
         </div>
       </section>
 
       {isDownloadOpen && (
-        <div className="fixed inset-0 z-40 grid place-items-center bg-black/40 px-4">
+        <div className="fixed inset-0 z-40 grid place-items-center modal-overlay px-4">
           <div className="glass-panel w-full max-w-md p-5">
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -1140,7 +1130,7 @@ export default function ColorGradeLutPage() {
               <button
                 type="button"
                 onClick={() => setIsDownloadOpen(false)}
-                className="text-xs font-medium text-ink-soft underline decoration-transparent underline-offset-4 transition hover:text-ink hover:decoration-ink/30"
+                className="text-xs font-medium text-ink-soft underline decoration-transparent underline-offset-4 transition hover:text-ink hover:decoration-[var(--text-secondary)]"
               >
                 Close
               </button>
@@ -1167,3 +1157,4 @@ export default function ColorGradeLutPage() {
     </main>
   );
 }
+

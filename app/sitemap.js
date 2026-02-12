@@ -11,9 +11,19 @@ export default function sitemap() {
             priority: 0.9,
         },
         {
+            url: 'https://grayglyph.netlify.app/grayscale',
+            lastModified: new Date(),
+            priority: 0.9,
+        },
+        {
             url: 'https://grayglyph.netlify.app/color-grade-lut',
             lastModified: new Date(),
             priority: 0.9,
+        },
+        {
+            url: 'https://grayglyph.netlify.app/color-transfer',
+            lastModified: new Date(),
+            priority: 0.8,
         },
     ];
 }

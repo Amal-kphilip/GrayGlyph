@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from "react";
-import Link from "next/link";
 import { useEditorState } from "./hooks";
 // processImage is required dynamically to ensure worker init on client only
 import EditorSidebar from "./components/EditorSidebar";
 import { FaUpload, FaDownload } from "react-icons/fa";
-import NextImage from "next/image";
+import FeatureNavbar from "../components/FeatureNavbar";
+import FeatureHero from "../components/FeatureHero";
+import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
 import dynamic from "next/dynamic";
 
 // Dynamic Import for CropOverlay (Client Side Only)
@@ -329,72 +331,51 @@ export default function EditorPage() {
     // --- RENDER UI ---
 
     if (!state.isLoaded) {
-        // ... LANDING PAGE ...
         return (
-            <div className="relative min-h-screen w-full overflow-x-hidden font-sans text-ink">
-                {/* Background (Matches Home) */}
-                <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-                    <span className="absolute -left-16 -top-20 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(213,108,79,0.4),transparent_70%)]" />
-                    <span className="absolute right-[-140px] top-28 h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,rgba(60,125,108,0.32),transparent_70%)]" />
-                    <span className="absolute bottom-[-90px] left-[40%] h-64 w-64 rounded-full bg-[radial-gradient(circle,rgba(38,57,79,0.2),transparent_70%)]" />
-                </div>
+            <div className="min-h-screen w-full overflow-x-hidden text-[var(--text-primary)]">
+                <main className="page-shell">
+                    <FeatureNavbar
+                        links={[
+                            { href: "/grayscale", label: "Grayscale" },
+                            { href: "/color-transfer", label: "Color Transfer" }
+                        ]}
+                    />
 
-                <main className="mx-auto w-[min(1200px,92vw)] py-6 md:py-8">
-                    <div className="mb-5 flex items-center gap-3">
-                        <Link href="/" aria-label="GrayGlyph Home" className="inline-flex items-center">
-                            <NextImage src="/assets/grayglyph-logo.png" alt="GrayGlyph logo" width={180} height={40} className="h-8 w-auto object-contain md:h-9" priority />
-                        </Link>
-                    </div>
+                    <section className="section-gap">
+                        <FeatureHero
+                            label="BROWSER-BASED EDITOR"
+                            title="Professional Color Grading & Photo Editing"
+                            description="Master tone curves, HSL mixing, crop, geometry, and cinematic presets - fully in your browser."
+                            ctaLabel="Start Editing"
+                            onCtaClick={() => fileInputRef.current?.click()}
+                        />
+                    </section>
 
-                    <header className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
-                        <section className="glass-panel animate-rise p-5 md:p-8 flex flex-col justify-center">
-                            <div className="flex items-center gap-2 mb-4">
-                                <span className="text-sm font-medium text-ink-soft">Browser-based Editor</span>
+                    <section className="section-gap">
+                        <div className="glass-panel overflow-hidden p-0">
+                            <div className="flex min-h-[62vh] flex-col lg:flex-row">
+                                <main className="relative flex min-h-[320px] flex-1 items-center justify-center overflow-hidden bg-transparent p-4 sm:p-6">
+                                    <Card variant="glass" className="relative z-10 max-w-sm p-6 text-center">
+                                        <h3 className="text-xl">Editor Workspace</h3>
+                                        <p className="mt-2 text-sm text-ink-soft">Open an image to start editing with live preview and professional controls.</p>
+                                        <Button type="button" onClick={() => fileInputRef.current?.click()} className="mt-5">
+                                            Start Editing
+                                        </Button>
+                                    </Card>
+                                </main>
+                                <aside className="min-h-[22rem] w-full border-t border-[var(--glass-border)] bg-[var(--glass-bg)] lg:w-[25rem] lg:border-l lg:border-t-0">
+                                    <EditorSidebar
+                                        params={state.params}
+                                        updateParam={updateParam}
+                                        setParams={setParams}
+                                        isCropping={isCropping}
+                                        setIsCropping={setIsCropping}
+                                        onCropDone={handleCropDone}
+                                    />
+                                </aside>
                             </div>
-                            <h1 className="font-serifDisplay text-4xl leading-tight text-ink md:text-5xl lg:text-6xl mb-6">
-                                Professional Color Grading & Photo Editing
-                            </h1>
-                            <p className="text-lg leading-relaxed text-ink-soft md:text-xl mb-8 max-w-xl">
-                                Master your images with precise tone curves, HSL color mixing, and cinematic presets. 100% private.
-                            </p>
-                            <button onClick={() => fileInputRef.current.click()} className="btn-primary text-lg px-8 py-3 shadow-xl shadow-blue-500/20 hover:shadow-blue-500/30 transition-all transform hover:-translate-y-0.5">
-                                Start Editing Now
-                            </button>
-                        </section>
-                        <section className="grid gap-3 sm:grid-cols-2">
-                            <article className="glass-soft-panel animate-rise p-6 flex flex-col justify-center" style={{ animationDelay: "100ms" }}>
-                                <div className="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center mb-4 text-xl">🎨</div>
-                                <h3 className="text-lg font-bold text-ink mb-2">Color Grading</h3>
-                                <p className="text-sm text-ink-soft leading-relaxed">
-                                    Split toning for shadows, midtones, and highlights with adjustable balance.
-                                </p>
-                            </article>
-
-                            <article className="glass-soft-panel animate-rise p-6 flex flex-col justify-center" style={{ animationDelay: "200ms" }}>
-                                <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-4 text-xl">📈</div>
-                                <h3 className="text-lg font-bold text-ink mb-2">Tone Curves</h3>
-                                <p className="text-sm text-ink-soft leading-relaxed">
-                                    Precise Master, Red, Green, and Blue channel curve adjustments.
-                                </p>
-                            </article>
-
-                            <article className="glass-soft-panel animate-rise p-6 flex flex-col justify-center" style={{ animationDelay: "300ms" }}>
-                                <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mb-4 text-xl">🔒</div>
-                                <h3 className="text-lg font-bold text-ink mb-2">Private & Secure</h3>
-                                <p className="text-sm text-ink-soft leading-relaxed">
-                                    No uploads. All processing happens locally in your browser via Web Workers.
-                                </p>
-                            </article>
-
-                            <article className="glass-soft-panel animate-rise p-6 flex flex-col justify-center" style={{ animationDelay: "400ms" }}>
-                                <div className="w-10 h-10 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center mb-4 text-xl">⚡</div>
-                                <h3 className="text-lg font-bold text-ink mb-2">Instant Preview</h3>
-                                <p className="text-sm text-ink-soft leading-relaxed">
-                                    Real-time processing with zero latency. Toggle Before/After instantly.
-                                </p>
-                            </article>
-                        </section>
-                    </header>
+                        </div>
+                    </section>
                 </main>
                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
             </div>
@@ -402,80 +383,65 @@ export default function EditorPage() {
     }
 
     return (
-        <div className="flex h-screen flex-col bg-gray-100 overflow-hidden font-sans fixed inset-0">
+        <div className="h-screen flex flex-col text-[var(--text-primary)]">
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
 
-                        {/* Toolbar */}
-            <header className="flex-shrink-0 bg-white border-b border-gray-200 px-3 py-2 z-20 shadow-sm">
-                <div className="relative flex flex-col gap-2 sm:h-12 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-2 sm:gap-4">
-                        <Link href="/" className="font-bold text-gray-800 tracking-tight flex items-center gap-2">
-                            <span className="inline-flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center text-yellow-500" aria-hidden="true">
-                                <svg viewBox="0 0 20 20" className="h-full w-full fill-current">
-                                    <path d="M11.6 1.5 3 11.2h5l-1.6 7.3L17 8.8h-5l-0.4-7.3z" />
-                                </svg>
-                            </span>
-                            <span className="truncate max-w-[40vw] sm:max-w-none">GrayGlyph</span>
-                            <span className="hidden sm:inline text-xs font-normal text-gray-500 uppercase px-1.5 py-0.5 bg-gray-100 rounded">Editor</span>
-                        </Link>
+            <div className="mx-auto flex h-full w-full max-w-[1440px] flex-col px-4 py-4 sm:px-6 lg:px-8">
+                <FeatureNavbar
+                    className="flex-shrink-0"
+                    links={[
+                        { href: "/grayscale", label: "Grayscale" },
+                        { href: "/color-transfer", label: "Color Transfer" }
+                    ]}
+                />
+
+                <section className="glass-panel mt-4 flex min-h-0 flex-1 flex-col overflow-hidden p-0">
+                    <div className="flex flex-shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[var(--glass-border)] bg-[var(--glass-bg)] px-4 py-3">
+                        <div className="flex items-center gap-2">
+                            <Button type="button" variant="ghost" onClick={() => fileInputRef.current?.click()} className="gap-1.5 px-4 py-2 text-xs sm:text-sm">
+                                <FaUpload size={12} /> Open
+                            </Button>
+                            <Button type="button" onClick={handleDownload} disabled={!state.isLoaded} className="gap-1.5 px-4 py-2 text-xs sm:text-sm disabled:cursor-not-allowed disabled:opacity-60">
+                                <FaDownload size={12} /> Export
+                            </Button>
+                        </div>
+
+                        <div className="flex items-center gap-2 rounded-full border border-[var(--glass-border)] bg-[var(--glass-bg)] px-2 py-2 backdrop-blur-xl">
+                            <button
+                                onMouseDown={() => setShowOriginal(true)}
+                                onMouseUp={() => setShowOriginal(false)}
+                                onMouseLeave={() => setShowOriginal(false)}
+                                onTouchStart={() => setShowOriginal(true)}
+                                onTouchEnd={() => setShowOriginal(false)}
+                                disabled={!state.isLoaded || isCropping}
+                                className={`select-none rounded-full px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide transition-all sm:text-xs ${showOriginal ? "bg-[var(--accent)] text-[var(--accent-foreground)] shadow-inner" : "bg-[var(--glass-bg)] text-[var(--text-primary)] hover:bg-[var(--glass-hover)]"}`}
+                            >
+                                <span className="sm:hidden">{showOriginal ? "Original" : "Before"}</span>
+                                <span className="hidden sm:inline">{showOriginal ? "Original" : "Hold for Before"}</span>
+                            </button>
+                            {isCropping && (
+                                <div className="flex gap-2">
+                                    <button onClick={handleCropCancel} className="rounded-full border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-primary)] hover:bg-[var(--glass-hover)] sm:text-xs">
+                                        Cancel
+                                    </button>
+                                    <button onClick={handleCropDone} className="rounded-full bg-[var(--accent)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--accent-foreground)] shadow-sm sm:text-xs">
+                                        Done
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
-                    <div className="flex items-center gap-2 sm:order-3">
-                        <button onClick={() => fileInputRef.current.click()} className="flex items-center gap-2 px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors border border-transparent hover:border-gray-200">
-                            <FaUpload size={12} /> Open
-                        </button>
-                        <button onClick={handleDownload} disabled={!state.isLoaded} className="flex items-center gap-2 px-4 py-1.5 text-xs sm:text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors shadow-sm">
-                            <FaDownload size={12} /> Export
-                        </button>
-                    </div>
+                    <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
+                        <main className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-transparent p-2 sm:p-4" ref={containerRef}>
+                            <canvas
+                                ref={canvasRef}
+                                className={`relative z-10 block max-h-full max-w-full rounded-2xl object-contain shadow-2xl ring-1 ring-[var(--glass-border)] ${isCropping ? "hidden" : "block"}`}
+                            />
 
-                    <div className="flex items-center justify-center gap-2 sm:absolute sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2">
-                        <button
-                            onMouseDown={() => setShowOriginal(true)}
-                            onMouseUp={() => setShowOriginal(false)}
-                            onMouseLeave={() => setShowOriginal(false)}
-                            onTouchStart={() => setShowOriginal(true)}
-                            onTouchEnd={() => setShowOriginal(false)}
-                            disabled={!state.isLoaded || isCropping}
-                            className={`flex items-center gap-2 px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-full transition-all select-none 
-                            ${showOriginal ? "bg-blue-600 text-white shadow-inner" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
-                        >
-                            <span className="sm:hidden">{showOriginal ? "Original" : "Before"}</span>
-                            <span className="hidden sm:inline">{showOriginal ? "Original" : "Hold for Before"}</span>
-                        </button>
-                        {isCropping && (
-                            <div className="flex gap-2">
-                                <button onClick={handleCropCancel} className="bg-gray-700 text-white px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-full shadow-lg hover:bg-gray-600">
-                                    Cancel
-                                </button>
-                                <button onClick={handleCropDone} className="bg-green-600 text-white px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-full shadow-lg hover:bg-green-500">
-                                    Done
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </header>
-
-            {/* Editor Workspace */}
-            <div className="flex-1 flex overflow-hidden flex-col lg:flex-row animate-in fade-in duration-300">
-                <main className="flex-1 relative bg-[#1e1e1e] flex items-center justify-center p-4 sm:p-8 overflow-hidden order-1 lg:order-1 h-[50vh] lg:h-auto" ref={containerRef}>
-                    <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: "radial-gradient(#888 1px, transparent 1px)", backgroundSize: "20px 20px" }}></div>
-
-                    {/* MAIN CANVAS */}
-                    {/* Note: We rely on the Render Loop to draw here. No logic inside JSX for canvas updates. */}
-                    <canvas
-                        ref={canvasRef}
-                        className={`max-w-full max-h-full shadow-2xl object-contain ring-1 ring-white/10 ${isCropping ? 'hidden' : 'block'}`}
-                    />
-
-                    {/* CROP MODE view logic stays in Effect/JSX, but uses separate canvas ref */}
-                    {isCropping && (
-                        <>
-                            <canvas ref={imagePreviewRef} className="max-w-full max-h-full shadow-2xl object-contain ring-1 ring-blue-500/50" />
-                            {(() => {
-                                const CropOverlay = require("./components/CropOverlay").default;
-                                return (
+                            {isCropping && (
+                                <>
+                                    <canvas ref={imagePreviewRef} className="relative z-10 max-h-full max-w-full rounded-2xl object-contain shadow-2xl ring-1 ring-accent/50" />
                                     <CropOverlay
                                         crop={tempCrop}
                                         onCropChange={setTempCrop}
@@ -483,22 +449,22 @@ export default function EditorPage() {
                                         containerRef={containerRef}
                                         layoutTrigger={layoutTrigger}
                                     />
-                                );
-                            })()}
-                        </>
-                    )}
-                </main>
+                                </>
+                            )}
+                        </main>
 
-                <aside className="w-full lg:w-80 bg-white border-t lg:border-t-0 lg:border-l border-gray-200 z-10 flex flex-col order-2 lg:order-2 h-[50vh] lg:h-auto">
-                    <EditorSidebar
-                        params={state.params}
-                        updateParam={updateParam}
-                        setParams={setParams}
-                        isCropping={isCropping}
-                        setIsCropping={setIsCropping}
-                        onCropDone={handleCropDone}
-                    />
-                </aside>
+                        <aside className="min-h-0 w-full flex-shrink-0 border-t border-[var(--glass-border)] bg-[var(--glass-bg)] lg:w-[380px] lg:border-l lg:border-t-0">
+                            <EditorSidebar
+                                params={state.params}
+                                updateParam={updateParam}
+                                setParams={setParams}
+                                isCropping={isCropping}
+                                setIsCropping={setIsCropping}
+                                onCropDone={handleCropDone}
+                            />
+                        </aside>
+                    </div>
+                </section>
             </div>
         </div>
     );

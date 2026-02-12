@@ -1,16 +1,18 @@
 import "./globals.css";
-import { Cormorant_Garamond, Sora } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
+import SiteFooter from "./site-footer";
+import BackgroundGradientAnimation from "../components/ui/BackgroundGradientAnimation";
 
-const sora = Sora({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-sora",
+  variable: "--font-body",
   display: "swap",
-  weight: ["300", "400", "500", "600"]
+  weight: ["400", "500", "600", "700"]
 });
 
-const cormorant = Cormorant_Garamond({
+const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
-  variable: "--font-cormorant",
+  variable: "--font-heading",
   display: "swap",
   weight: ["500", "600", "700"]
 });
@@ -40,7 +42,8 @@ export const metadata = {
   },
   openGraph: {
     title: "GrayGlyph - Free Grayscale Converter, Photo Editor & Color Grading Tool",
-    description: "Free browser-based image tools for grayscale conversion, photo editing, and color grade transfer. No uploads. Full privacy.",
+    description:
+      "Free browser-based image tools for grayscale conversion, photo editing, and color grade transfer. No uploads. Full privacy.",
     url: "https://grayglyph.netlify.app/",
     type: "website",
     siteName: "GrayGlyph",
@@ -57,7 +60,8 @@ export const metadata = {
   twitter: {
     card: "summary_large_image",
     title: "GrayGlyph - Free Grayscale Converter, Photo Editor & Color Grading Tool",
-    description: "Free browser-based image tools for grayscale conversion, photo editing, and color grade transfer. No uploads. Full privacy.",
+    description:
+      "Free browser-based image tools for grayscale conversion, photo editing, and color grade transfer. No uploads. Full privacy.",
     images: ["/assets/grayglyph-logo.png"]
   },
   robots: {
@@ -80,18 +84,21 @@ export const metadata = {
     apple: [{ url: "/apple-icon.png", type: "image/png", sizes: "180x180" }]
   },
   verification: {
-    google: "google-site-verification-code", // Placeholder
+    google: "google-site-verification-code"
   }
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${sora.variable} ${cormorant.variable} antialiased min-h-screen flex flex-col`}>
-        {children}
-        <footer className="mt-auto py-6 text-center text-xs text-gray-600">
-          Made with ❤️ by Amal
-        </footer>
+      <body className={`${inter.variable} ${spaceGrotesk.variable} min-h-screen bg-theme text-[var(--text-primary)] antialiased`}>
+        <BackgroundGradientAnimation />
+        <div className="app-content-layer min-h-screen text-[var(--text-primary)]">
+          <div className="flex min-h-screen flex-col">
+            {children}
+            <SiteFooter />
+          </div>
+        </div>
       </body>
     </html>
   );

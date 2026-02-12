@@ -260,7 +260,6 @@ export default function Presets({ params, onApply }) {
     const [customPresets, setCustomPresets] = useState([]);
     const [selectedKey, setSelectedKey] = useState(null);
 
-    // Load from localStorage on mount
     useEffect(() => {
         const saved = localStorage.getItem("gg_editor_presets");
         if (saved) {
@@ -272,13 +271,7 @@ export default function Presets({ params, onApply }) {
         const name = prompt("Enter preset name:");
         if (!name) return;
 
-        // Deep copy params to avoid reference issues
-        // We only save relevant fields, but for simplicity saving all params is fine 
-        // as long as geometry (crop) isn't intended to be part of style. 
-        // Typically presets exclude geometry.
-
         const presetParams = { ...params };
-        // Reset geometry for the preset
         presetParams.crop = null;
         presetParams.rotate = 0;
         presetParams.flipH = false;
@@ -291,11 +284,6 @@ export default function Presets({ params, onApply }) {
     };
 
     const apply = (presetParams, key) => {
-        // We merge with current geometry to avoid resetting crop/rotation
-        // OR we just assume onApply handles it. 
-        // The parent (EditorSidebar -> Page) updateParam only updates specific fields? 
-        // No, updateParam usually updates one field. We need a "setAllParams" or apply logic.
-        // We will assume onApply accepts a full param object.
         onApply(presetParams);
         setSelectedKey(key);
     };
@@ -303,7 +291,7 @@ export default function Presets({ params, onApply }) {
     return (
         <div className="space-y-6">
             <div>
-                <h3 className="text-xs font-bold text-gray-400 uppercase mb-3">Defaults</h3>
+                <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">Defaults</h3>
                 <div className="grid grid-cols-2 gap-2">
                     {DEFAULTS.map((p) => {
                         const key = `default:${p.name}`;
@@ -312,10 +300,10 @@ export default function Presets({ params, onApply }) {
                             <button
                                 key={key}
                                 onClick={() => apply(p.params, key)}
-                                className={`text-xs py-3 px-2 rounded-lg text-left font-medium transition ${
+                                className={`rounded-xl px-2 py-3 text-left text-xs font-medium transition ${
                                     isSelected
-                                        ? "bg-blue-600 text-white shadow-md ring-2 ring-blue-300"
-                                        : "bg-gray-100/50 hover:bg-gray-100 text-gray-700"
+                                        ? "bg-accent text-[var(--accent-foreground)] shadow-sm ring-2 ring-accent/35"
+                                        : "border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--text-primary)] hover:bg-[var(--glass-hover)]"
                                 }`}
                             >
                                 {p.name}
@@ -327,16 +315,16 @@ export default function Presets({ params, onApply }) {
 
             <div>
                 <div className="flex justify-between items-center mb-3">
-                    <h3 className="text-xs font-bold text-gray-400 uppercase">Your Presets</h3>
+                    <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">Your Presets</h3>
                     <button
                         onClick={savePreset}
-                        className="text-[10px] bg-blue-100 text-blue-600 px-2 py-1 rounded font-bold hover:bg-blue-200 transition"
+                        className="rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] px-2.5 py-1 text-[10px] font-semibold tracking-wide text-[var(--text-primary)] transition hover:bg-[var(--glass-hover)]"
                     >
                         + SAVE
                     </button>
                 </div>
                 {customPresets.length === 0 ? (
-                    <p className="text-xs text-gray-400 italic">No saved presets yet.</p>
+                    <p className="text-xs italic text-muted">No saved presets yet.</p>
                 ) : (
                     <div className="grid grid-cols-2 gap-2">
                         {customPresets.map((p, i) => {
@@ -344,12 +332,12 @@ export default function Presets({ params, onApply }) {
                             const isSelected = selectedKey === key;
                             return (
                                 <button
-                                    key={`${key}:${i}`}
-                                    onClick={() => apply(p.params, key)}
-                                    className={`text-xs py-3 px-2 rounded-lg text-left font-medium transition ${
-                                        isSelected
-                                            ? "bg-blue-600 text-white shadow-md ring-2 ring-blue-300 border border-blue-500"
-                                            : "bg-blue-50/50 hover:bg-blue-50 text-blue-900 border border-blue-100"
+                                key={`${key}:${i}`}
+                                onClick={() => apply(p.params, key)}
+                                className={`rounded-xl border px-2 py-3 text-left text-xs font-medium transition ${
+                                    isSelected
+                                            ? "border-accent bg-accent text-[var(--accent-foreground)] shadow-sm ring-2 ring-accent/35"
+                                            : "border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--text-primary)] hover:bg-[var(--glass-hover)]"
                                     }`}
                                 >
                                     {p.name}
