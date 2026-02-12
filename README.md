@@ -1,48 +1,56 @@
-# GrayGlyph (Next.js + React + Tailwind)
+﻿# GrayGlyph
 
-GrayGlyph is a powerful browser-based image processing suite. It features a dedicated Grayscale Converter and a new Advanced Photo Editor for professional-grade color grading and adjustments.
+Professional privacy-first image editing in the browser.
 
-## Stack
-- Next.js (App Router)
-- React
-- Tailwind CSS
-- Canvas API & Web Workers (High-performance client-side processing)
+GrayGlyph is a privacy-first, browser-based image toolkit for creators who need fast results without compromising control. Every operation runs locally in your browser with no uploads, no server-side image processing, and no tracking.
 
 ## Features
 
-### Grayscale Converter (/)
-- **Luminance-Weighted Conversion**: precise black and white transform (Rec. 709).
-- **Non-Destructive**: Original image stays untouched.
-- **Real-Time Comparison**: "Before / After" split slider.
-- **Grain & Contrast**: Adjustable film grain and tonal contrast.
+- Online Grayscale Converter
+- Free Photo Editor for Light, Color, Geometry, and Curves
+- 3D LUT Color Grade Transfer
+- Before/After Comparison
+- Non-destructive editing workflow
+- 100% client-side processing
 
-### Advanced Photo Editor (/editor)
-- **Professional Color Grading**: Split toning for Shadows, Midtones, and Highlights.
-- **Tone Curves**: Master, Red, Green, and Blue channel curve adjustments.
-- **Color Mixer**: HSL adjustments for 8 individual color channels.
-- **Smart Presets**: Instant, professional looks (Soft, Noir, Steel, etc.).
-- **Detail Tools**: Sharpening and Noise Reduction.
-- **Geometry**: Crop, Rotate, Flip, and Straighten.
-- **Privacy First**: All processing happens in your browser via Web Workers. No uploads.
+## Why GrayGlyph?
 
-## Getting Started
-1. Install dependencies:
-   `npm install`
-2. Start development server:
-   `npm run dev`
-3. Open:
-   `http://localhost:3000`
+- No uploads
+- No servers
+- No tracking
+- Fast and private processing
+- Works offline after initial load
 
-## Build
-- Production build: `npm run build`
-- Start production server: `npm run start`
+## Tech Stack
 
-## Site Structure
-- `/` - **Home**: Grayscale Converter.
-- `/editor` - **Editor**: Advanced Photo Editor.
+- React
+- Tailwind CSS
+- HTML Canvas
+- Web Workers
+- Pure client-side processing
 
-## Notes
-- Performance is optimized using Web Workers and Transferable Objects for zero-latency UI.
-- Full-resolution export for both tools.
+## How It Works
 
-[Live Demo](https://grayglyph.netlify.app/)
+GrayGlyph uses a canvas-based rendering and processing pipeline with Web Workers for responsive UI and background computation. Color operations use LAB and LUT-based transforms where appropriate, and edits are applied through a non-destructive pipeline so the original image data remains intact while you iterate.
+
+If you are searching for an online grayscale converter, a browser photo editor, a 3D LUT color grading tool, or a privacy-first image editor, GrayGlyph is designed for that exact workflow.
+
+## Demo
+
+Live Demo: https://yourdomain.com
+
+## Contributing
+
+Contributions are welcome.
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Commit your changes: `git commit -m "Add your feature"`
+4. Push to your branch: `git push origin feature/your-feature`
+5. Open a pull request
+
+For major changes, open an issue first to discuss scope and implementation details.
+
+## License
+
+MIT

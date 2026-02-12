@@ -4,13 +4,29 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
+const DEFAULT_LINKS = [
+  { href: "/", label: "Home" },
+  { href: "/grayscale", label: "Grayscale" },
+  { href: "/editor", label: "Photo Editor" },
+  { href: "/color-transfer", label: "Color Grade" }
+];
+
 export default function FeatureNavbar({ links = [], className = "" }) {
   const pathname = usePathname() || "/";
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const resolvedLinks = [{ href: "/", label: "Home" }, ...links].filter(
-    (link, index, all) => all.findIndex((item) => item.href === link.href) === index
-  );
+  const resolvedLinks = (() => {
+    const merged = new Map(DEFAULT_LINKS.map((link) => [link.href, link]));
+
+    links.forEach((link) => {
+      if (!link?.href || !link?.label) {
+        return;
+      }
+      merged.set(link.href, { href: link.href, label: link.label });
+    });
+
+    return [...merged.values()];
+  })();
 
   useEffect(() => {
     setMenuOpen(false);
@@ -19,6 +35,9 @@ export default function FeatureNavbar({ links = [], className = "" }) {
   const isActive = (href) => {
     if (href === "/") {
       return pathname === "/";
+    }
+    if (href === "/color-transfer") {
+      return pathname === "/color-transfer" || pathname.startsWith("/color-transfer/") || pathname === "/color-grade-lut" || pathname.startsWith("/color-grade-lut/");
     }
     return pathname === href || pathname.startsWith(`${href}/`);
   };
