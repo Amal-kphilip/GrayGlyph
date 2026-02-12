@@ -261,50 +261,67 @@ body {
     color: var(--text-muted);
   }
 
-  .btn-primary {
-    @apply inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold tracking-wide transition duration-200 focus-visible:outline-none focus-visible:ring-2;
-    background: var(--btn-primary-bg);
-    background-size: 220% 220%;
-    background-position: 0% 50%;
-    color: var(--btn-primary-text);
-    border: 1px solid transparent;
-    box-shadow:
-      0 14px 36px rgba(59, 130, 246, 0.34),
-      inset 0 1px 0 rgba(255, 255, 255, 0.16);
-    transition:
-      background-position 280ms ease,
-      filter 220ms ease,
-      box-shadow 220ms ease,
-      transform 220ms ease;
-  }
-
-  .btn-primary:hover {
-    background-position: 100% 50%;
-    filter: brightness(1.08);
-    transform: translateY(-1px);
-    box-shadow:
-      0 18px 42px rgba(99, 102, 241, 0.4),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  }
-
-  .btn-primary:focus-visible {
-    --tw-ring-color: color-mix(in srgb, var(--accent) 40%, transparent);
-  }
-
+  .btn-primary,
   .btn-ghost {
-    @apply inline-flex items-center justify-center rounded-xl border px-5 py-2.5 text-sm font-medium tracking-wide transition duration-200 focus-visible:outline-none focus-visible:ring-2;
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.48), rgba(15, 23, 42, 0.56));
+    @apply inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold tracking-wide focus-visible:outline-none focus-visible:ring-2;
+    position: relative;
+    z-index: 0;
+    isolation: isolate;
+    overflow: hidden;
     color: var(--text-primary);
-    border-color: var(--glass-border-strong);
-    box-shadow: 0 10px 28px rgba(2, 6, 23, 0.34);
+    background: rgba(15, 23, 42, 0.3);
+    border: 1px solid var(--glass-border-strong);
+    box-shadow:
+      0 10px 22px rgba(2, 6, 23, 0.32),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    transition:
+      color 350ms ease,
+      border-color 350ms ease,
+      box-shadow 350ms ease;
   }
 
+  .btn-primary::after,
+  .btn-ghost::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    z-index: -1;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, #ffffff 0%), color-mix(in srgb, var(--accent-soft) 78%, #ffffff 0%));
+    transition: width 350ms ease;
+  }
+
+  .btn-primary:hover,
   .btn-ghost:hover {
-    background: linear-gradient(135deg, rgba(51, 65, 85, 0.58), rgba(30, 41, 59, 0.66));
+    color: var(--btn-primary-text);
+    border-color: color-mix(in srgb, var(--accent) 90%, transparent);
+    box-shadow:
+      0 14px 30px rgba(59, 130, 246, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18);
   }
 
+  .btn-primary:hover::after,
+  .btn-ghost:hover::after {
+    width: 100%;
+  }
+
+  .btn-primary:disabled,
+  .btn-ghost:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .btn-primary:disabled::after,
+  .btn-ghost:disabled::after {
+    width: 0;
+  }
+
+  .btn-primary:focus-visible,
   .btn-ghost:focus-visible {
-    --tw-ring-color: color-mix(in srgb, var(--accent) 28%, transparent);
+    --tw-ring-color: color-mix(in srgb, var(--accent) 38%, transparent);
   }
 
   .feature-card {
@@ -343,8 +360,51 @@ body {
 
   .feature-card-cta {
     @apply inline-flex w-fit items-center justify-center rounded-xl px-7 py-3.5 text-sm font-semibold tracking-wide;
-    background: var(--feature-card-cta-bg);
+    position: relative;
+    z-index: 0;
+    isolation: isolate;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, #ffffff 55%, transparent);
     color: var(--feature-card-cta-text);
+    background: transparent;
+    transition: color 350ms ease, border-color 350ms ease, box-shadow 350ms ease;
+    box-shadow:
+      0 8px 20px rgba(2, 6, 23, 0.26),
+      inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  }
+
+  .feature-card-cta::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--feature-card-cta-bg);
+    z-index: -2;
+  }
+
+  .feature-card-cta::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+    transition: width 350ms ease;
+    z-index: -1;
+  }
+
+  .feature-card:hover .feature-card-cta {
+    color: var(--btn-primary-text);
+    border-color: color-mix(in srgb, var(--accent) 90%, transparent);
+    box-shadow:
+      0 12px 28px rgba(59, 130, 246, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  }
+
+  .feature-card:hover .feature-card-cta::after {
+    width: 100%;
   }
 
   .status-chip {

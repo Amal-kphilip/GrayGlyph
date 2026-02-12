@@ -39,18 +39,6 @@ If you are searching for an online grayscale converter, a browser photo editor, 
 
 Live Demo: https://grayglyph.netlify.app/
 
-## Contributing
-
-Contributions are welcome.
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Commit your changes: `git commit -m "Add your feature"`
-4. Push to your branch: `git push origin feature/your-feature`
-5. Open a pull request
-
-For major changes, open an issue first to discuss scope and implementation details.
-
 ## License
 
 MIT
