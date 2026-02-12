@@ -285,6 +285,44 @@ export default function GrayscaleClient() {
     sourceCtx.drawImage(fullCanvas, rect.x, rect.y, rect.width, rect.height);
   }, []);
 
+  const seedPreviewFromOriginal = useCallback(() => {
+    const sourceCanvas = sourceCanvasRef.current;
+    const outputCanvas = outputCanvasRef.current;
+    const compareCanvas = compareCanvasRef.current;
+
+    if (!sourceCanvas || !outputCanvas || !compareCanvas) {
+      return;
+    }
+
+    const outputCtx = outputCanvas.getContext("2d");
+    const compareCtx = compareCanvas.getContext("2d");
+    if (!outputCtx || !compareCtx) {
+      return;
+    }
+
+    const { previewWidth, previewHeight } = stateRef.current;
+
+    outputCtx.clearRect(0, 0, previewWidth, previewHeight);
+    outputCtx.drawImage(sourceCanvas, 0, 0, previewWidth, previewHeight);
+
+    compareCtx.clearRect(0, 0, previewWidth, previewHeight);
+    compareCtx.drawImage(sourceCanvas, 0, 0, previewWidth, previewHeight);
+
+    const splitRatio = Number(controlsRef.current.split) / 100;
+    const splitX = Math.floor(previewWidth * splitRatio);
+
+    compareCtx.save();
+    compareCtx.strokeStyle = getCanvasThemeColors().splitLine;
+    compareCtx.lineWidth = 2;
+    compareCtx.beginPath();
+    compareCtx.moveTo(splitX + 0.5, 0);
+    compareCtx.lineTo(splitX + 0.5, previewHeight);
+    compareCtx.stroke();
+    compareCtx.restore();
+
+    drawPreviewLabels(compareCtx, splitX, previewWidth);
+  }, [drawPreviewLabels]);
+
   const applyFilters = useCallback(() => {
     const fullCanvas = fullCanvasRef.current;
     const fullOutputCanvas = fullOutputCanvasRef.current;
@@ -460,11 +498,13 @@ export default function GrayscaleClient() {
       const nextPreview = getPreviewSize(img.width, img.height);
       applyPreviewSize(nextPreview.width, nextPreview.height);
 
+      drawOriginal();
+      seedPreviewFromOriginal();
+
       setFileMeta(`${labelPrefix} - ${img.width} x ${img.height}px`);
       setHasImage(true);
-      scheduleFullRender();
     },
-    [applyPreviewSize, ensureProcessingCanvases, getPreviewSize, scheduleFullRender, setFullSize]
+    [applyPreviewSize, drawOriginal, ensureProcessingCanvases, getPreviewSize, seedPreviewFromOriginal, setFullSize]
   );
 
   const loadBlobImage = useCallback(
@@ -572,8 +612,11 @@ export default function GrayscaleClient() {
     if (!hasImage) {
       return;
     }
+    applyPreviewSize(stateRef.current.previewWidth, stateRef.current.previewHeight);
+    drawOriginal();
+    seedPreviewFromOriginal();
     scheduleFullRender();
-  }, [hasImage, scheduleFullRender]);
+  }, [applyPreviewSize, drawOriginal, hasImage, scheduleFullRender, seedPreviewFromOriginal]);
 
   useEffect(() => {
     const onResize = () => {

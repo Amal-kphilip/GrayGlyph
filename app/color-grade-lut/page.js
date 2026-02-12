@@ -726,6 +726,16 @@ export default function ColorGradeLutPage() {
         setIsLutReady(true);
         setStatusText("LUT ready");
       }
+
+      requestAnimationFrame(() => {
+        applyPreviewSize(nextSize.width, nextSize.height);
+        drawTargetToCanvas();
+        if (lutRef.current) {
+          scheduleApply();
+        } else {
+          drawComparison();
+        }
+      });
     } catch (error) {
       setTargetMeta("Failed to load target image");
       setStatusText("LUT not built yet");
