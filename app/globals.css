@@ -269,7 +269,7 @@ body {
     isolation: isolate;
     overflow: hidden;
     color: var(--text-primary);
-    background: rgba(15, 23, 42, 0.3);
+    background: transparent;
     border: 1px solid var(--glass-border-strong);
     box-shadow:
       0 10px 22px rgba(2, 6, 23, 0.32),
@@ -278,6 +278,16 @@ body {
       color 350ms ease,
       border-color 350ms ease,
       box-shadow 350ms ease;
+  }
+
+  .btn-primary::before,
+  .btn-ghost::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.46), rgba(15, 23, 42, 0.6));
+    z-index: -2;
   }
 
   .btn-primary::after,
