@@ -60,14 +60,6 @@ export default function HomePage() {
         </div>
 
         <aside className="glass-panel animate-rise relative overflow-hidden p-6 md:p-8">
-          <div
-            className="pointer-events-none absolute -right-12 -top-16 h-52 w-52 rounded-full"
-            style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--accent-soft) 30%, transparent), transparent 72%)" }}
-          />
-          <div
-            className="pointer-events-none absolute -left-10 bottom-0 h-44 w-44 rounded-full"
-            style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--accent) 30%, transparent), transparent 72%)" }}
-          />
           <div className="relative rounded-3xl border border-[var(--border-primary)] bg-[var(--surface-overlay)] p-4 md:p-5">
             <div className="mb-3 flex items-center justify-between">
               <span className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">Workspace Preview</span>
