@@ -2,7 +2,7 @@
 
 import NextImage from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const DESKTOP_MAX_WIDTH = 960;
 const DESKTOP_MAX_HEIGHT = 540;
@@ -418,13 +418,16 @@ export default function ColorGradeLutPage() {
 
   const resizeFrameRef = useRef(0);
   const applyFrameRef = useRef(0);
+  const splitFrameRef = useRef(0);
+  const splitRef = useRef(55);
+  const splitInputRef = useRef(null);
+  const splitValueRef = useRef(null);
 
   const [sourceMeta, setSourceMeta] = useState("No source image loaded");
   const [targetMeta, setTargetMeta] = useState("No target image loaded");
   const [intensity, setIntensity] = useState(85);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLutReady, setIsLutReady] = useState(false);
-  const [split, setSplit] = useState(55);
   const [sourcePreviewTick, setSourcePreviewTick] = useState(0);
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const [previewSize, setPreviewSize] = useState({
@@ -514,7 +517,7 @@ export default function ColorGradeLutPage() {
 
     ctx.drawImage(outputCanvas, 0, 0, compareCanvas.width, compareCanvas.height);
 
-    const splitRatio = Number(split) / 100;
+    const splitRatio = splitRef.current / 100;
     const splitX = Math.floor(compareCanvas.width * splitRatio);
 
     ctx.save();
@@ -534,7 +537,36 @@ export default function ColorGradeLutPage() {
     ctx.restore();
 
     drawPreviewLabels(ctx, splitX, compareCanvas.width);
-  }, [isLutReady, split]);
+  }, [isLutReady]);
+
+  const syncSplitUi = useCallback((value, inputNode) => {
+    if (splitValueRef.current) {
+      splitValueRef.current.textContent = `${value}`;
+    }
+
+    const range = inputNode || splitInputRef.current;
+    if (range) {
+      range.style.background = getSliderBackground(value, 0, 100);
+    }
+  }, []);
+
+  const scheduleSplitDraw = useCallback(() => {
+    if (splitFrameRef.current) {
+      return;
+    }
+
+    splitFrameRef.current = requestAnimationFrame(() => {
+      splitFrameRef.current = 0;
+      drawComparison();
+    });
+  }, [drawComparison]);
+
+  const handleSplitInput = useCallback((event) => {
+    const nextValue = clamp(Number(event.currentTarget.value), 0, 100);
+    splitRef.current = nextValue;
+    syncSplitUi(nextValue, event.currentTarget);
+    scheduleSplitDraw();
+  }, [scheduleSplitDraw, syncSplitUi]);
 
   const applyLutToTarget = useCallback(() => {
     const lut = lutRef.current;
@@ -816,6 +848,9 @@ export default function ColorGradeLutPage() {
       if (applyFrameRef.current) {
         cancelAnimationFrame(applyFrameRef.current);
       }
+      if (splitFrameRef.current) {
+        cancelAnimationFrame(splitFrameRef.current);
+      }
     };
   }, [applyPreviewSize]);
 
@@ -832,7 +867,14 @@ export default function ColorGradeLutPage() {
     }
 
     drawComparison();
-  }, [drawComparison, split]);
+  }, [drawComparison]);
+
+  useEffect(() => {
+    if (!isLutReady) {
+      return;
+    }
+    syncSplitUi(splitRef.current);
+  }, [isLutReady, syncSplitUi]);
 
   useEffect(() => {
     if (!sourceImageRef.current || !sourcePreviewCanvasRef.current) {
@@ -850,8 +892,7 @@ export default function ColorGradeLutPage() {
 
   const isReadyToApply = Boolean(sourceImageRef.current && targetImageRef.current);
 
-  const intensityDisplay = useMemo(() => intensity, [intensity]);
-  const splitDisplay = useMemo(() => split, [split]);
+  const intensityDisplay = intensity;
 
   return (
     <main className="relative mx-auto min-h-screen w-[min(1200px,92vw)] py-6 md:py-8">
@@ -1009,7 +1050,7 @@ export default function ColorGradeLutPage() {
             {isLutReady && (
               <div className="flex items-center gap-2 text-sm text-muted">
                 <span>Split</span>
-                <output>{splitDisplay}</output>
+                <output ref={splitValueRef}>{splitRef.current}</output>
               </div>
             )}
           </div>
@@ -1028,13 +1069,14 @@ export default function ColorGradeLutPage() {
             {targetImageRef.current && isLutReady && (
               <div className="absolute bottom-2 left-2 right-2 rounded-full border border-black/10 bg-white/85 px-3 py-2 backdrop-blur-md md:bottom-3 md:left-3 md:right-3">
                 <input
+                  ref={splitInputRef}
                   type="range"
                   min="0"
                   max="100"
-                  value={split}
-                  onChange={(event) => setSplit(Number(event.target.value))}
+                  defaultValue={splitRef.current}
+                  onInput={handleSplitInput}
                   className="range-input"
-                  style={{ background: getSliderBackground(split, 0, 100) }}
+                  style={{ background: getSliderBackground(splitRef.current, 0, 100) }}
                   disabled={!isLutReady}
                 />
               </div>

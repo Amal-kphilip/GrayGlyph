@@ -108,6 +108,7 @@ export default function HomePage() {
 
   const [controls, setControls] = useState(DEFAULT_CONTROLS);
   const [split, setSplit] = useState(55);
+  const [activePreset, setActivePreset] = useState(null);
   const [previewSize, setPreviewSize] = useState({
     width: DESKTOP_PREVIEW_WIDTH,
     height: DESKTOP_PREVIEW_HEIGHT
@@ -529,11 +530,18 @@ export default function HomePage() {
       brightness: preset.brightness,
       grain: preset.grain
     }));
+    setActivePreset(presetName);
+  }, []);
+
+  const updateControl = useCallback((key, value) => {
+    setActivePreset(null);
+    setControls((current) => ({ ...current, [key]: value }));
   }, []);
 
   const resetControls = useCallback(() => {
     setControls(DEFAULT_CONTROLS);
     setSplit(55);
+    setActivePreset(null);
   }, []);
 
   const handleDownload = useCallback(() => {
@@ -864,9 +872,7 @@ export default function HomePage() {
                 min="0"
                 max="100"
                 value={controls.intensity}
-                onChange={(event) =>
-                  setControls((current) => ({ ...current, intensity: Number(event.target.value) }))
-                }
+                onChange={(event) => updateControl("intensity", Number(event.target.value))}
                 className="range-input col-span-2"
                 style={{ background: getSliderBackground(controls.intensity, 0, 100) }}
               />
@@ -880,9 +886,7 @@ export default function HomePage() {
                 min="-40"
                 max="40"
                 value={controls.contrast}
-                onChange={(event) =>
-                  setControls((current) => ({ ...current, contrast: Number(event.target.value) }))
-                }
+                onChange={(event) => updateControl("contrast", Number(event.target.value))}
                 className="range-input col-span-2"
                 style={{ background: getSliderBackground(controls.contrast, -40, 40) }}
               />
@@ -896,9 +900,7 @@ export default function HomePage() {
                 min="-30"
                 max="30"
                 value={controls.brightness}
-                onChange={(event) =>
-                  setControls((current) => ({ ...current, brightness: Number(event.target.value) }))
-                }
+                onChange={(event) => updateControl("brightness", Number(event.target.value))}
                 className="range-input col-span-2"
                 style={{ background: getSliderBackground(controls.brightness, -30, 30) }}
               />
@@ -912,9 +914,7 @@ export default function HomePage() {
                 min="0"
                 max="30"
                 value={controls.grain}
-                onChange={(event) =>
-                  setControls((current) => ({ ...current, grain: Number(event.target.value) }))
-                }
+                onChange={(event) => updateControl("grain", Number(event.target.value))}
                 className="range-input col-span-2"
                 style={{ background: getSliderBackground(controls.grain, 0, 30) }}
               />
@@ -924,9 +924,7 @@ export default function HomePage() {
               <input
                 type="checkbox"
                 checked={controls.weights}
-                onChange={(event) =>
-                  setControls((current) => ({ ...current, weights: event.target.checked }))
-                }
+                onChange={(event) => updateControl("weights", event.target.checked)}
                 className="h-4 w-4 rounded"
               />
               Use luminance weighting (Rec. 709)
@@ -938,7 +936,8 @@ export default function HomePage() {
                   key={presetName}
                   type="button"
                   onClick={() => applyPreset(presetName)}
-                  className="btn-ghost"
+                  aria-pressed={activePreset === presetName}
+                  className={activePreset === presetName ? "btn-primary" : "btn-ghost"}
                 >
                   {PRESET_LABELS[presetName]}
                 </button>
