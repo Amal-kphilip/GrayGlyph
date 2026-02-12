@@ -32,12 +32,11 @@ const TOOL_LINKS = [
 ];
 
 const RESOURCE_LINKS = [
-  { href: "/#how-it-works", label: "How It Works", ariaLabel: "Read how GrayGlyph works" },
-  { href: "/#faq", label: "FAQ", ariaLabel: "Read frequently asked questions" },
-  { href: "/#blog", label: "Blog", ariaLabel: "Visit GrayGlyph blog" },
-  { href: "/#privacy-policy", label: "Privacy Policy", ariaLabel: "Read privacy policy" },
-  { href: "/#terms-of-service", label: "Terms of Service", ariaLabel: "Read terms of service" },
-  { href: "/#contact", label: "Contact Us", ariaLabel: "Contact GrayGlyph" }
+  { href: "/how-it-works", label: "How It Works", ariaLabel: "Read how GrayGlyph works" },
+  { href: "/faq", label: "FAQ", ariaLabel: "Read frequently asked questions" },
+  { href: "/privacy-policy", label: "Privacy Policy", ariaLabel: "Read privacy policy" },
+  { href: "/terms-of-service", label: "Terms of Service", ariaLabel: "Read terms of service" },
+  { href: "/contact", label: "Contact Us", ariaLabel: "Contact GrayGlyph" }
 ];
 
 const SOCIAL_LINKS = [
@@ -74,6 +73,15 @@ const SOCIAL_LINKS = [
 ];
 
 const TRUST_BADGES = ["No uploads", "No tracking", "100% browser processing"];
+
+const FULL_FOOTER_ROUTES = new Set([
+  "/",
+  "/how-it-works",
+  "/faq",
+  "/privacy-policy",
+  "/terms-of-service",
+  "/contact"
+]);
 
 function SocialIcon({ type }) {
   if (type === "linkedin") {
@@ -126,11 +134,41 @@ function TrustCheckIcon() {
 export default function SiteFooter() {
   const pathname = usePathname();
 
-  if (pathname?.startsWith("/editor")) {
+  const normalizedPath =
+    pathname && pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname || "/";
+
+  if (normalizedPath === "/editor" || normalizedPath.startsWith("/editor/")) {
     return null;
   }
 
   const year = new Date().getFullYear();
+  const isFullFooter = FULL_FOOTER_ROUTES.has(normalizedPath);
+
+  if (!isFullFooter) {
+    return (
+      <footer className="mt-auto px-4 pb-5 pt-10 sm:px-6 lg:px-8" aria-label="Site footer">
+        <div className="mx-auto w-full max-w-7xl rounded-2xl border border-[var(--border-primary)] bg-[var(--surface-glass)] px-4 py-3 text-center text-xs text-muted backdrop-blur-xl sm:text-sm">
+          <div className="mb-2 flex items-center justify-center gap-2.5">
+            {SOCIAL_LINKS.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                target="_blank"
+                rel="noreferrer noopener"
+                aria-label={link.ariaLabel}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border-primary)] bg-[var(--surface-overlay)] text-ink-soft transition hover:text-ink"
+              >
+                <SocialIcon type={link.icon} />
+                <span className="sr-only">{link.label}</span>
+              </a>
+            ))}
+          </div>
+          <p>{`© ${year} GrayGlyph. Privacy-first image tools built for creators.`}</p>
+        </div>
+      </footer>
+    );
+  }
+
   const softwareApplicationLd = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
@@ -225,7 +263,7 @@ export default function SiteFooter() {
         </div>
 
         <div className="mt-8 border-t border-[var(--border-primary)] pt-5 text-center text-xs text-muted sm:text-sm">
-          <p>{`©️ ${year} GrayGlyph. Privacy-first image tools built for creators.`}</p>
+          <p>{`© ${year} GrayGlyph. Privacy-first image tools built for creators.`}</p>
         </div>
       </div>
     </footer>

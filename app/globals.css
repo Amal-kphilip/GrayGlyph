@@ -87,11 +87,11 @@
   --blob-indigo: #4338ca;
   --blob-cyan: #0ea5e9;
 
-  --animate-first: moveVertical 30s ease infinite;
-  --animate-second: moveInCircle 20s reverse infinite;
-  --animate-third: moveInCircle 40s linear infinite;
-  --animate-fourth: moveHorizontal 40s ease infinite;
-  --animate-fifth: moveInCircle 20s ease infinite;
+  --animate-first: moveVertical 24s ease infinite;
+  --animate-second: moveInCircle 16s reverse infinite;
+  --animate-third: moveInCircle 32s linear infinite;
+  --animate-fourth: moveHorizontal 32s ease infinite;
+  --animate-fifth: moveInCircle 16s ease infinite;
 }
 
 * {
@@ -558,13 +558,13 @@ body {
 
 @media (max-width: 640px) {
   .gradient-blob {
-    animation-duration: 42s;
+    animation-duration: 34s;
     opacity: 0.5;
   }
 
   .animate-second,
   .animate-fifth {
-    animation-duration: 30s;
+    animation-duration: 24s;
   }
 }
 

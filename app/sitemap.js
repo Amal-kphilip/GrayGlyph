@@ -25,5 +25,30 @@ export default function sitemap() {
             lastModified: new Date(),
             priority: 0.8,
         },
+        {
+            url: 'https://grayglyph.netlify.app/how-it-works',
+            lastModified: new Date(),
+            priority: 0.6,
+        },
+        {
+            url: 'https://grayglyph.netlify.app/faq',
+            lastModified: new Date(),
+            priority: 0.6,
+        },
+        {
+            url: 'https://grayglyph.netlify.app/privacy-policy',
+            lastModified: new Date(),
+            priority: 0.5,
+        },
+        {
+            url: 'https://grayglyph.netlify.app/terms-of-service',
+            lastModified: new Date(),
+            priority: 0.5,
+        },
+        {
+            url: 'https://grayglyph.netlify.app/contact',
+            lastModified: new Date(),
+            priority: 0.6,
+        },
     ];
 }
