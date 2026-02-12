@@ -22,7 +22,7 @@ export default function BackgroundGradientAnimation() {
       <div className="absolute inset-0 gradient-base" />
 
       <div
-        className="gradient-blob animate-first absolute -left-40 -top-36 h-[640px] w-[640px] rounded-full blur-[120px]"
+        className="gradient-blob animate-first absolute -left-24 -top-20 h-[420px] w-[420px] rounded-full blur-[86px] sm:-left-40 sm:-top-36 sm:h-[640px] sm:w-[640px] sm:blur-[120px]"
         style={{
           ...blobPerfStyle,
           opacity: 0.72 * opacityScale,
@@ -32,7 +32,7 @@ export default function BackgroundGradientAnimation() {
       />
 
       <div
-        className="gradient-blob animate-second absolute -right-36 bottom-[-120px] h-[540px] w-[540px] rounded-full blur-[120px]"
+        className="gradient-blob animate-second absolute -right-20 bottom-[-60px] h-[360px] w-[360px] rounded-full blur-[86px] sm:-right-36 sm:bottom-[-120px] sm:h-[540px] sm:w-[540px] sm:blur-[120px]"
         style={{
           ...blobPerfStyle,
           opacity: 0.68 * opacityScale,
@@ -42,7 +42,7 @@ export default function BackgroundGradientAnimation() {
       />
 
       <div
-        className="gradient-blob animate-third absolute left-[42%] top-[32%] h-[460px] w-[460px] rounded-full blur-[120px]"
+        className="gradient-blob animate-third absolute left-[46%] top-[36%] h-[300px] w-[300px] rounded-full blur-[80px] sm:left-[42%] sm:top-[32%] sm:h-[460px] sm:w-[460px] sm:blur-[120px]"
         style={{
           ...blobPerfStyle,
           opacity: 0.62 * opacityScale,
@@ -52,7 +52,7 @@ export default function BackgroundGradientAnimation() {
       />
 
       <div
-        className="gradient-blob animate-fourth absolute left-[-22%] top-[48%] h-[340px] w-[1250px] rounded-full blur-[120px]"
+        className="gradient-blob animate-fourth absolute hidden sm:block sm:left-[-22%] sm:top-[48%] sm:h-[340px] sm:w-[1250px] sm:rounded-full sm:blur-[120px]"
         style={{
           ...blobPerfStyle,
           opacity: 0.54 * opacityScale,
@@ -61,7 +61,7 @@ export default function BackgroundGradientAnimation() {
       />
 
       <div
-        className="gradient-blob animate-fifth absolute right-[10%] top-[8%] h-[420px] w-[420px] rounded-full blur-[120px]"
+        className="gradient-blob animate-fifth absolute right-[4%] top-[8%] h-[260px] w-[260px] rounded-full blur-[76px] sm:right-[10%] sm:h-[420px] sm:w-[420px] sm:blur-[120px]"
         style={{
           ...blobPerfStyle,
           opacity: 0.58 * opacityScale,

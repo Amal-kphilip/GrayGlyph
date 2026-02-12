@@ -264,13 +264,27 @@ body {
   .btn-primary {
     @apply inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold tracking-wide transition duration-200 focus-visible:outline-none focus-visible:ring-2;
     background: var(--btn-primary-bg);
+    background-size: 220% 220%;
+    background-position: 0% 50%;
     color: var(--btn-primary-text);
     border: 1px solid transparent;
-    box-shadow: var(--shadow-soft);
+    box-shadow:
+      0 14px 36px rgba(59, 130, 246, 0.34),
+      inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    transition:
+      background-position 280ms ease,
+      filter 220ms ease,
+      box-shadow 220ms ease,
+      transform 220ms ease;
   }
 
   .btn-primary:hover {
-    filter: brightness(1.06);
+    background-position: 100% 50%;
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+    box-shadow:
+      0 18px 42px rgba(99, 102, 241, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
 
   .btn-primary:focus-visible {
@@ -540,6 +554,18 @@ body {
 
 .animate-fifth {
   animation: var(--animate-fifth);
+}
+
+@media (max-width: 640px) {
+  .gradient-blob {
+    animation-duration: 42s;
+    opacity: 0.5;
+  }
+
+  .animate-second,
+  .animate-fifth {
+    animation-duration: 30s;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

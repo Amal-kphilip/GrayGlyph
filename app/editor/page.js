@@ -353,8 +353,8 @@ export default function EditorPage() {
 
                     <section className="section-gap">
                         <div className="glass-panel overflow-hidden p-0">
-                            <div className="flex min-h-[62vh] flex-col lg:flex-row">
-                                <main className="relative flex min-h-[320px] flex-1 items-center justify-center overflow-hidden bg-transparent p-4 sm:p-6">
+                            <div className="flex min-h-[56vh] flex-col lg:min-h-[62vh] lg:flex-row">
+                                <main className="relative flex min-h-[280px] flex-1 items-center justify-center overflow-hidden bg-transparent p-4 sm:min-h-[320px] sm:p-6">
                                     <Card variant="glass" className="relative z-10 max-w-sm p-6 text-center">
                                         <h3 className="text-xl">Editor Workspace</h3>
                                         <p className="mt-2 text-sm text-ink-soft">Open an image to start editing with live preview and professional controls.</p>
@@ -363,7 +363,7 @@ export default function EditorPage() {
                                         </Button>
                                     </Card>
                                 </main>
-                                <aside className="min-h-[22rem] w-full border-t border-[var(--glass-border)] bg-[var(--glass-bg)] lg:w-[25rem] lg:border-l lg:border-t-0">
+                                <aside className="h-[50vh] min-h-[18rem] w-full overflow-hidden border-t border-[var(--glass-border)] bg-[var(--glass-bg)] lg:h-auto lg:min-h-[22rem] lg:w-[25rem] lg:border-l lg:border-t-0">
                                     <EditorSidebar
                                         params={state.params}
                                         updateParam={updateParam}
@@ -383,10 +383,10 @@ export default function EditorPage() {
     }
 
     return (
-        <div className="h-screen flex flex-col text-[var(--text-primary)]">
+        <div className="min-h-[100dvh] h-[100dvh] flex flex-col text-[var(--text-primary)]">
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
 
-            <div className="mx-auto flex h-full w-full max-w-[1440px] flex-col px-4 py-4 sm:px-6 lg:px-8">
+            <div className="mx-auto flex h-full w-full max-w-[1440px] flex-col px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
                 <FeatureNavbar
                     className="flex-shrink-0"
                     links={[
@@ -395,8 +395,8 @@ export default function EditorPage() {
                     ]}
                 />
 
-                <section className="glass-panel mt-4 flex min-h-0 flex-1 flex-col overflow-hidden p-0">
-                    <div className="flex flex-shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[var(--glass-border)] bg-[var(--glass-bg)] px-4 py-3">
+                <section className="glass-panel mt-3 flex min-h-0 flex-1 flex-col overflow-hidden p-0 sm:mt-4">
+                    <div className="flex flex-shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2 sm:gap-3 sm:px-4 sm:py-3">
                         <div className="flex items-center gap-2">
                             <Button type="button" variant="ghost" onClick={() => fileInputRef.current?.click()} className="gap-1.5 px-4 py-2 text-xs sm:text-sm">
                                 <FaUpload size={12} /> Open
@@ -433,7 +433,7 @@ export default function EditorPage() {
                     </div>
 
                     <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
-                        <main className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-transparent p-2 sm:p-4" ref={containerRef}>
+                        <main className="relative flex min-h-[38vh] flex-1 items-center justify-center overflow-hidden bg-transparent p-2 sm:min-h-0 sm:p-4" ref={containerRef}>
                             <canvas
                                 ref={canvasRef}
                                 className={`relative z-10 block max-h-full max-w-full rounded-2xl object-contain shadow-2xl ring-1 ring-[var(--glass-border)] ${isCropping ? "hidden" : "block"}`}
@@ -453,7 +453,7 @@ export default function EditorPage() {
                             )}
                         </main>
 
-                        <aside className="min-h-0 w-full flex-shrink-0 border-t border-[var(--glass-border)] bg-[var(--glass-bg)] lg:w-[380px] lg:border-l lg:border-t-0">
+                        <aside className="h-[46vh] max-h-[52vh] min-h-0 w-full flex-shrink-0 overflow-hidden border-t border-[var(--glass-border)] bg-[var(--glass-bg)] sm:h-[42vh] lg:h-auto lg:max-h-none lg:w-[380px] lg:border-l lg:border-t-0">
                             <EditorSidebar
                                 params={state.params}
                                 updateParam={updateParam}

@@ -20,12 +20,12 @@ export default function EditorSidebar({ params, updateParam, setParams, isCroppi
   return (
     <div className="h-full w-full flex-shrink-0 bg-[var(--glass-bg)] backdrop-blur-xl">
       <div className="flex h-full flex-col">
-        <div className="flex-shrink-0 border-b border-[var(--glass-border)] bg-[var(--glass-bg)] px-5 py-4 backdrop-blur-xl">
+        <div className="flex-shrink-0 border-b border-[var(--glass-border)] bg-[var(--glass-bg)] px-4 py-3 backdrop-blur-xl sm:px-5 sm:py-4">
           <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Editor Tools</h2>
           <p className="mt-1 text-xs text-ink-soft">Light, Color, Grading, and Curve controls</p>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 pb-8 pt-4">
+        <div className="flex-1 overflow-y-auto px-3 pb-6 pt-3 sm:px-4 sm:pb-8 sm:pt-4">
           <div className="space-y-1">
             <TabPanel title="Crop & Geometry" icon={FaCrop}>
               <div className="space-y-4">
