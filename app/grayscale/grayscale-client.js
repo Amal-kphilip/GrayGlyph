@@ -822,7 +822,7 @@ export default function GrayscaleClient() {
                 <div className="space-y-4">
                   <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[var(--surface-glass)] text-[var(--accent)]">
                     <svg viewBox="0 0 24 24" className="h-7 w-7 fill-current" aria-hidden="true">
-                      <path d="M12 3a1 1 0 0 1 1 1v8.59l2.3-2.3a1 1 0 1 1 1.4 1.42l-4 3.98a1 1 0 0 1-1.4 0l-4-3.98a1 1 0 0 1 1.4-1.42l2.3 2.3V4a1 1 0 0 1 1-1zm-7 14a1 1 0 0 1 1 1v1h12v-1a1 1 0 1 1 2 0v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1z" />
+                      <path d="M12 16a1 1 0 0 1-1-1V6.41L8.7 8.7a1 1 0 1 1-1.4-1.42l4-3.98a1 1 0 0 1 1.4 0l4 3.98a1 1 0 1 1-1.4 1.42L13 6.4V15a1 1 0 0 1-1 1zm7 2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2a1 1 0 1 1 2 0v1h12v-1a1 1 0 0 1 1-1z" />
                     </svg>
                   </span>
                   <p className="text-base font-medium text-ink">Upload an image to preview</p>
