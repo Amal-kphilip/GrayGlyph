@@ -230,7 +230,7 @@ export default function EditorPage() {
                 setLayoutTrigger(v => v + 1);
             }
         }
-    }, [isCropping, state.params]);
+    }, [isCropping, state.params, state.previewImage]);
 
     // Initialize Temp Crop on Enter
     const normalizeCrop = useCallback((crop) => {

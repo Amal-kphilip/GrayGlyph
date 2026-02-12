@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 export default function CropOverlay({ crop, onCropChange, imageRef, containerRef, layoutTrigger }) {
     const [dragging, setDragging] = useState(null); // 'tl', 'tr', 'bl', 'br', 'move'
@@ -6,7 +6,7 @@ export default function CropOverlay({ crop, onCropChange, imageRef, containerRef
     // We need to map the normalized crop (0-1) to the currently displayed image dimensions.
     // The image might be scaled via CSS "object-contain".
 
-    const getDisplayRect = () => {
+    const getDisplayRect = useCallback(() => {
         if (!imageRef.current) return { x: 0, y: 0, w: 0, h: 0 };
         const rect = imageRef.current.getBoundingClientRect();
         const parent = containerRef.current.getBoundingClientRect();
@@ -19,7 +19,7 @@ export default function CropOverlay({ crop, onCropChange, imageRef, containerRef
             naturalW: imageRef.current.width,
             naturalH: imageRef.current.height
         };
-    };
+    }, [containerRef, imageRef]);
 
     const handleMouseDown = (e, type) => {
         e.preventDefault();
@@ -77,7 +77,7 @@ export default function CropOverlay({ crop, onCropChange, imageRef, containerRef
             window.removeEventListener("mousemove", handleMouseMove);
             window.removeEventListener("mouseup", handleMouseUp);
         };
-    }, [dragging, crop]);
+    }, [dragging, crop, containerRef, getDisplayRect, onCropChange]);
 
     // Render Overlay
     const display = getDisplayRect();
