@@ -17,6 +17,7 @@ const cormorant = Cormorant_Garamond({
 
 export const metadata = {
   metadataBase: new URL("https://grayglyph.netlify.app"),
+  manifest: "/manifest.webmanifest",
   title: {
     default: "GrayGlyph - Free Grayscale Converter, Photo Editor & Color Grading Tool",
     template: "%s | GrayGlyph"
@@ -71,9 +72,12 @@ export const metadata = {
     }
   },
   icons: {
-    icon: [{ url: "/assets/icon.png", type: "image/png" }],
-    shortcut: ["/assets/icon.png"],
-    apple: "/assets/icon.png"
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/assets/icon-512.png", type: "image/png", sizes: "512x512" }
+    ],
+    shortcut: ["/favicon.ico"],
+    apple: [{ url: "/apple-icon.png", type: "image/png", sizes: "180x180" }]
   },
   verification: {
     google: "google-site-verification-code", // Placeholder
