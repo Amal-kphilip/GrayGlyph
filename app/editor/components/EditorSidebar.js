@@ -20,13 +20,13 @@ export default function EditorSidebar({ params, updateParam, setParams, isCroppi
   return (
     <div className="h-full w-full flex-shrink-0 bg-[var(--glass-bg)] backdrop-blur-xl">
       <div className="flex h-full flex-col">
-        <div className="flex-shrink-0 border-b border-[var(--glass-border)] bg-[var(--glass-bg)] px-4 py-3 backdrop-blur-xl sm:px-5 sm:py-4">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Editor Tools</h2>
-          <p className="mt-1 text-xs text-ink-soft">Light, Color, Grading, and Curve controls</p>
+        <div className="flex-shrink-0 border-b border-[var(--glass-border)] px-4 pb-4 pt-5 sm:px-5">
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">Editor Tools</h2>
+          <p className="mt-1.5 text-xs text-ink-soft">Light, Color, Grading, and Curve controls</p>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-3 pb-6 pt-3 sm:px-4 sm:pb-8 sm:pt-4">
-          <div className="space-y-1">
+        <div className="flex-1 overflow-y-auto px-4 pb-8 pt-5 [scrollbar-color:var(--glass-border)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[var(--glass-border)] sm:px-5 sm:pb-10">
+          <div className="space-y-5">
             <TabPanel title="Crop & Geometry" icon={FaCrop}>
               <div className="space-y-4">
                 <button
@@ -37,7 +37,7 @@ export default function EditorSidebar({ params, updateParam, setParams, isCroppi
                       setIsCropping(true);
                     }
                   }}
-                  className={`mb-2 w-full rounded-xl py-2.5 text-xs font-semibold uppercase tracking-wide transition ${isCropping ? "bg-[var(--accent)] text-[var(--accent-foreground)] shadow-sm" : "border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--text-primary)] hover:bg-[var(--glass-hover)]"}`}
+                  className={`w-full rounded-xl py-2.5 text-xs font-semibold uppercase tracking-[0.12em] transition ${isCropping ? "bg-[var(--accent)] text-[var(--accent-foreground)] shadow-sm" : "border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--text-primary)] hover:bg-[var(--glass-hover)]"}`}
                 >
                   {isCropping ? "Done Cropping" : "Adjust Crop"}
                 </button>
@@ -133,8 +133,8 @@ export default function EditorSidebar({ params, updateParam, setParams, isCroppi
             </TabPanel>
 
             <TabPanel title="Color Basics" icon={FaPalette}>
-              <div className="mb-4">
-                <h4 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">White Balance</h4>
+              <div className="mb-5">
+                <h4 className="mb-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">White Balance</h4>
                 <Slider
                   label="Temp"
                   value={params.temperature}
@@ -151,7 +151,7 @@ export default function EditorSidebar({ params, updateParam, setParams, isCroppi
                 />
               </div>
               <div>
-                <h4 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">Mix</h4>
+                <h4 className="mb-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">Mix</h4>
                 <Slider
                   label="Saturation"
                   value={params.saturation}
@@ -286,7 +286,7 @@ function CurveChannelControl({ params, updateParam }) {
         </button>
       </div>
 
-      <div className="mb-2 flex justify-between text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+      <div className="mb-3 flex justify-between text-xs font-semibold uppercase tracking-[0.14em] text-muted">
         <span>{channel} Curve</span>
         <button
           className="text-[10px] font-medium text-accent hover:underline"

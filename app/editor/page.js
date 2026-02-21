@@ -4,11 +4,12 @@ import { useEffect, useLayoutEffect, useRef, useState, useCallback } from "react
 import { useEditorState } from "./hooks";
 // processImage is required dynamically to ensure worker init on client only
 import EditorSidebar from "./components/EditorSidebar";
-import { FaUpload, FaDownload } from "react-icons/fa";
+import { FaUpload } from "react-icons/fa";
 import FeatureNavbar from "../components/FeatureNavbar";
 import FeatureHero from "../components/FeatureHero";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
+import DownloadButton from "../components/ui/DownloadButton";
 import dynamic from "next/dynamic";
 
 // Dynamic Import for CropOverlay (Client Side Only)
@@ -28,6 +29,7 @@ export default function EditorPage() {
     const geometryBufferRef = useRef(null); // ImageData (Geometry-only)
     const editedBufferRef = useRef(null);   // ImageData (Processed)
     const [showOriginal, setShowOriginal] = useState(false);
+    const showOriginalRef = useRef(false);
 
     // --- 2. PIPELINE STATE ---
     const processingVersion = useRef(0);    // Counter to track latest request
@@ -48,7 +50,7 @@ export default function EditorPage() {
         // Select Buffer
         // If showing original, use originalBuffer.
         // If showing edited, use editedBuffer (if ready), fallback to original.
-        const buffer = showOriginal
+        const buffer = showOriginalRef.current
             ? (geometryBufferRef.current || originalBufferRef.current)
             : (overrideBuffer || editedBufferRef.current || geometryBufferRef.current || originalBufferRef.current);
 
@@ -62,7 +64,7 @@ export default function EditorPage() {
 
         const ctx = canvas.getContext("2d");
         ctx.putImageData(buffer, 0, 0);
-    }, [showOriginal]);
+    }, []);
 
 
     // --- 4. PROCESSING PIPELINE (HEAVY) ---
@@ -198,6 +200,10 @@ export default function EditorPage() {
 
     // Trigger Render on Toggle Change (Zero Processing)
     useEffect(() => {
+        showOriginalRef.current = showOriginal;
+    }, [showOriginal]);
+
+    useEffect(() => {
         if (state.isLoaded) {
             render();
         }
@@ -266,8 +272,10 @@ export default function EditorPage() {
     };
 
     // --- EXPORT LOGIC ---
-    const handleDownload = async () => {
-        if (!state.originalImage) return;
+    const prepareDownloadBlob = async () => {
+        if (!state.originalImage) {
+            throw new Error("No source image available");
+        }
 
         const offCanvas = document.createElement("canvas");
         const { applyGeometry } = require("./processor");
@@ -275,7 +283,9 @@ export default function EditorPage() {
         // 1. Full Res Geometry
         // Ensure we use the COMMITTED crop (state.params), not tempCrop
         const sourceData = applyGeometry(state.originalImage, offCanvas, state.params);
-        if (!sourceData) return;
+        if (!sourceData) {
+            throw new Error("Failed to prepare export source");
+        }
 
         // 2. Full Res Process (One-shot) using a dedicated worker
         const exportWorker = new Worker(new URL("./worker.js", import.meta.url));
@@ -299,32 +309,25 @@ export default function EditorPage() {
 
         // 3. Save
         const finalData = processed || applyGeometry(state.originalImage, offCanvas, state.params);
-        if (finalData) {
-            const ctx = offCanvas.getContext("2d");
-            ctx.putImageData(finalData, 0, 0);
-
-            const blob = await new Promise((resolve) => {
-                offCanvas.toBlob((b) => resolve(b), "image/jpeg", 0.95);
-            });
-
-            const link = document.createElement("a");
-            link.download = "edited-" + state.imageName;
-            link.rel = "noopener";
-
-            if (blob) {
-                const url = URL.createObjectURL(blob);
-                link.href = url;
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-                URL.revokeObjectURL(url);
-            } else {
-                link.href = offCanvas.toDataURL("image/jpeg", 0.95);
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-            }
+        if (!finalData) {
+            throw new Error("Failed to process export pixels");
         }
+
+        const ctx = offCanvas.getContext("2d");
+        ctx.putImageData(finalData, 0, 0);
+
+        const blob = await new Promise((resolve) => {
+            offCanvas.toBlob((b) => resolve(b), "image/jpeg", 0.95);
+        });
+
+        if (!blob) {
+            throw new Error("Export blob generation failed");
+        }
+
+        return {
+            blob,
+            filename: "edited-" + state.imageName
+        };
     };
 
 
@@ -395,24 +398,41 @@ export default function EditorPage() {
                     ]}
                 />
 
-                <section className="glass-panel mt-3 flex min-h-0 flex-1 flex-col overflow-hidden p-0 sm:mt-4">
-                    <div className="flex flex-shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2 sm:gap-3 sm:px-4 sm:py-3">
-                        <div className="flex items-center gap-2">
-                            <Button type="button" variant="ghost" onClick={() => fileInputRef.current?.click()} className="gap-1.5 px-4 py-2 text-xs sm:text-sm">
+                <section className="glass-panel mt-4 flex min-h-0 flex-1 flex-col p-3 sm:mt-5 sm:p-4">
+                    <div className="flex flex-shrink-0 flex-col gap-3 border-b border-[var(--glass-border)] px-1 pb-4 pt-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-2">
+                        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:gap-3">
+                            <Button type="button" variant="ghost" onClick={() => fileInputRef.current?.click()} className="gap-1.5 px-4 py-2 text-xs font-medium sm:text-sm">
                                 <FaUpload size={12} /> Open
                             </Button>
-                            <Button type="button" onClick={handleDownload} disabled={!state.isLoaded} className="gap-1.5 px-4 py-2 text-xs sm:text-sm disabled:cursor-not-allowed disabled:opacity-60">
-                                <FaDownload size={12} /> Export
-                            </Button>
+                            <DownloadButton
+                                onGenerateBlob={prepareDownloadBlob}
+                                disabled={!state.isLoaded}
+                                idleText="Export"
+                                loadingText="Preparing..."
+                                successText="Downloaded"
+                                errorText="Download failed"
+                                className="min-w-[9rem] px-4 py-2 text-xs sm:text-sm"
+                            />
                         </div>
 
-                        <div className="flex items-center gap-2 rounded-full border border-[var(--glass-border)] bg-[var(--glass-bg)] px-2 py-2 backdrop-blur-xl">
+                        <div className="flex w-full items-center justify-start sm:w-auto sm:justify-end">
+                            <div className="flex items-center gap-2 rounded-full border border-[var(--glass-border)] bg-[var(--glass-bg)] px-2 py-2 backdrop-blur-xl">
                             <button
-                                onMouseDown={() => setShowOriginal(true)}
-                                onMouseUp={() => setShowOriginal(false)}
-                                onMouseLeave={() => setShowOriginal(false)}
-                                onTouchStart={() => setShowOriginal(true)}
-                                onTouchEnd={() => setShowOriginal(false)}
+                                type="button"
+                                onPointerDown={() => setShowOriginal(true)}
+                                onPointerUp={() => setShowOriginal(false)}
+                                onPointerLeave={() => setShowOriginal(false)}
+                                onPointerCancel={() => setShowOriginal(false)}
+                                onKeyDown={(event) => {
+                                    if (event.key === " " || event.key === "Enter") {
+                                        setShowOriginal(true);
+                                    }
+                                }}
+                                onKeyUp={(event) => {
+                                    if (event.key === " " || event.key === "Enter") {
+                                        setShowOriginal(false);
+                                    }
+                                }}
                                 disabled={!state.isLoaded || isCropping}
                                 className={`select-none rounded-full px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide transition-all sm:text-xs ${showOriginal ? "bg-[var(--accent)] text-[var(--accent-foreground)] shadow-inner" : "bg-[var(--glass-bg)] text-[var(--text-primary)] hover:bg-[var(--glass-hover)]"}`}
                             >
@@ -429,19 +449,20 @@ export default function EditorPage() {
                                     </button>
                                 </div>
                             )}
+                            </div>
                         </div>
                     </div>
 
-                    <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
-                        <main className="relative flex min-h-[38vh] flex-1 items-center justify-center overflow-hidden bg-transparent p-2 sm:min-h-0 sm:p-4" ref={containerRef}>
+                    <div className="mt-4 flex min-h-0 flex-1 flex-col gap-4 lg:mt-5 lg:flex-row lg:gap-5">
+                        <main className="relative flex w-full min-h-[36vh] items-start justify-center overflow-hidden rounded-[24px] bg-transparent p-3 sm:min-h-[44vh] sm:items-center sm:p-5 lg:min-h-0 lg:flex-1 lg:p-6" ref={containerRef}>
                             <canvas
                                 ref={canvasRef}
-                                className={`relative z-10 block max-h-full max-w-full rounded-2xl object-contain shadow-2xl ring-1 ring-[var(--glass-border)] ${isCropping ? "hidden" : "block"}`}
+                                className={`relative z-10 block max-h-[48vh] w-auto max-w-full rounded-[22px] object-contain shadow-2xl ring-1 ring-[var(--glass-border)] sm:max-h-[56vh] lg:max-h-[72vh] ${isCropping ? "hidden" : "block"}`}
                             />
 
                             {isCropping && (
                                 <>
-                                    <canvas ref={imagePreviewRef} className="relative z-10 max-h-full max-w-full rounded-2xl object-contain shadow-2xl ring-1 ring-accent/50" />
+                                    <canvas ref={imagePreviewRef} className="relative z-10 max-h-[48vh] w-auto max-w-full rounded-[22px] object-contain shadow-2xl ring-1 ring-accent/50 sm:max-h-[56vh] lg:max-h-[72vh]" />
                                     <CropOverlay
                                         crop={tempCrop}
                                         onCropChange={setTempCrop}
@@ -453,7 +474,7 @@ export default function EditorPage() {
                             )}
                         </main>
 
-                        <aside className="h-[46vh] max-h-[52vh] min-h-0 w-full flex-shrink-0 overflow-hidden border-t border-[var(--glass-border)] bg-[var(--glass-bg)] sm:h-[42vh] lg:h-auto lg:max-h-none lg:w-[380px] lg:border-l lg:border-t-0">
+                        <aside className="max-h-[52vh] min-h-[18rem] w-full flex-shrink-0 overflow-hidden rounded-[22px] border border-[var(--glass-border)] bg-[var(--glass-bg)] lg:max-h-none lg:min-h-0 lg:w-[380px] lg:rounded-[20px]">
                             <EditorSidebar
                                 params={state.params}
                                 updateParam={updateParam}

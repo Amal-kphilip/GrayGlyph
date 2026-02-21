@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import FeatureNavbar from "../components/FeatureNavbar";
+import DownloadButton from "../components/ui/DownloadButton";
 
 const DESKTOP_PREVIEW_WIDTH = 960;
 const DESKTOP_PREVIEW_HEIGHT = 540;
@@ -568,19 +569,27 @@ export default function GrayscaleClient() {
     setActivePreset(null);
   }, []);
 
-  const handleDownload = useCallback(() => {
+  const prepareDownloadBlob = useCallback(async () => {
     if (!stateRef.current.image || !fullOutputCanvasRef.current) {
-      return;
+      throw new Error("No processed image available");
     }
 
     const baseName = stateRef.current.filename.replace(/\.[^/.]+$/, "");
     const { mime, extension } = getDownloadFormat(stateRef.current.mime, stateRef.current.extension);
     const quality = mime === "image/jpeg" || mime === "image/webp" ? 0.92 : undefined;
 
-    const link = document.createElement("a");
-    link.download = `${baseName}-grayscale.${extension}`;
-    link.href = fullOutputCanvasRef.current.toDataURL(mime, quality);
-    link.click();
+    const blob = await new Promise((resolve) => {
+      fullOutputCanvasRef.current.toBlob((nextBlob) => resolve(nextBlob), mime, quality);
+    });
+
+    if (!blob) {
+      throw new Error("Grayscale blob generation failed");
+    }
+
+    return {
+      blob,
+      filename: `${baseName}-grayscale.${extension}`
+    };
   }, []);
 
   useEffect(() => {
@@ -703,17 +712,18 @@ export default function GrayscaleClient() {
               }}
             />
 
-            <div className="mt-5 rounded-2xl border border-[var(--border-primary)] bg-[var(--surface-glass)] px-4 py-3">
+            <div className="mt-5 hidden rounded-2xl border border-[var(--border-primary)] bg-[var(--surface-glass)] px-4 py-3 lg:block">
               <p className="text-sm text-muted">{fileMeta}</p>
               <div className="mt-3 flex flex-wrap gap-2.5">
-                <button
-                  type="button"
-                  onClick={handleDownload}
+                <DownloadButton
+                  onGenerateBlob={prepareDownloadBlob}
                   disabled={!hasImage}
-                  className="btn-ghost disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Download Image
-                </button>
+                  idleText="Download Image"
+                  loadingText="Preparing..."
+                  successText="Downloaded"
+                  errorText="Download failed"
+                  className="hidden min-w-[11.5rem] lg:inline-flex"
+                />
               </div>
             </div>
 
@@ -893,6 +903,18 @@ export default function GrayscaleClient() {
                       style={{ background: getSliderBackground(split, 0, 100) }}
                     />
                   </div>
+                </div>
+
+                <div className="mt-4 lg:hidden">
+                  <DownloadButton
+                    onGenerateBlob={prepareDownloadBlob}
+                    disabled={!hasImage}
+                    idleText="Download Image"
+                    loadingText="Preparing..."
+                    successText="Downloaded"
+                    errorText="Download failed"
+                    className="w-full"
+                  />
                 </div>
 
                 <div className="mt-3 hidden grid-cols-2 gap-3 md:grid">

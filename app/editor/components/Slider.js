@@ -3,12 +3,12 @@ export default function Slider({ label, value, min, max, onChange, step = 1, res
   const background = `linear-gradient(to right, var(--accent) ${percentage}%, var(--range-track) ${percentage}%)`;
 
   return (
-    <div className="mb-5 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-3 backdrop-blur-xl">
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <label className="text-xs font-medium uppercase tracking-[0.12em] text-muted">{label}</label>
+    <div className="mb-4 space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <label className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">{label}</label>
         <button
           type="button"
-          className="font-heading text-xs text-ink-soft transition hover:text-accent"
+          className="font-heading text-xs font-semibold text-ink-soft transition hover:text-accent"
           onClick={() => onChange(resetValue)}
           title="Reset"
         >

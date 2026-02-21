@@ -289,10 +289,10 @@ export default function Presets({ params, onApply }) {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-8">
             <div>
-                <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">Defaults</h3>
-                <div className="grid grid-cols-2 gap-2">
+                <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Defaults</h3>
+                <div className="grid grid-cols-2 gap-3">
                     {DEFAULTS.map((p) => {
                         const key = `default:${p.name}`;
                         const isSelected = selectedKey === key;
@@ -300,10 +300,10 @@ export default function Presets({ params, onApply }) {
                             <button
                                 key={key}
                                 onClick={() => apply(p.params, key)}
-                                className={`rounded-xl px-2 py-3 text-left text-xs font-medium transition ${
+                                className={`rounded-xl px-3 py-3 text-left text-xs transition ${
                                     isSelected
-                                        ? "bg-accent text-[var(--accent-foreground)] shadow-sm ring-2 ring-accent/35"
-                                        : "border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--text-primary)] hover:bg-[var(--glass-hover)]"
+                                        ? "bg-accent text-[var(--accent-foreground)] shadow-sm ring-2 ring-accent/35 font-semibold"
+                                        : "border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--text-primary)] font-medium hover:bg-[var(--glass-hover)]"
                                 }`}
                             >
                                 {p.name}
@@ -313,12 +313,12 @@ export default function Presets({ params, onApply }) {
                 </div>
             </div>
 
-            <div>
-                <div className="flex justify-between items-center mb-3">
-                    <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">Your Presets</h3>
+            <div className="border-t border-[var(--glass-border)] pt-5">
+                <div className="mb-3 flex items-center justify-between">
+                    <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Your Presets</h3>
                     <button
                         onClick={savePreset}
-                        className="rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] px-2.5 py-1 text-[10px] font-semibold tracking-wide text-[var(--text-primary)] transition hover:bg-[var(--glass-hover)]"
+                        className="rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] px-2.5 py-1 text-[10px] font-semibold tracking-[0.12em] text-[var(--text-primary)] transition hover:bg-[var(--glass-hover)]"
                     >
                         + SAVE
                     </button>
@@ -326,7 +326,7 @@ export default function Presets({ params, onApply }) {
                 {customPresets.length === 0 ? (
                     <p className="text-xs italic text-muted">No saved presets yet.</p>
                 ) : (
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-3">
                         {customPresets.map((p, i) => {
                             const key = `custom:${p.name}`;
                             const isSelected = selectedKey === key;
@@ -334,10 +334,10 @@ export default function Presets({ params, onApply }) {
                                 <button
                                 key={`${key}:${i}`}
                                 onClick={() => apply(p.params, key)}
-                                className={`rounded-xl border px-2 py-3 text-left text-xs font-medium transition ${
+                                className={`rounded-xl border px-3 py-3 text-left text-xs transition ${
                                     isSelected
-                                            ? "border-accent bg-accent text-[var(--accent-foreground)] shadow-sm ring-2 ring-accent/35"
-                                            : "border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--text-primary)] hover:bg-[var(--glass-hover)]"
+                                            ? "border-accent bg-accent text-[var(--accent-foreground)] shadow-sm ring-2 ring-accent/35 font-semibold"
+                                            : "border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--text-primary)] font-medium hover:bg-[var(--glass-hover)]"
                                     }`}
                                 >
                                     {p.name}
