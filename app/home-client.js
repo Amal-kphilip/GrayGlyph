@@ -1,144 +1,120 @@
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowDownRight, ArrowUpRight, Check, CircleArrowRight, Fingerprint, Image as ImageIcon, Layers3, MoveUpRight, Palette, ShieldCheck, Sparkles } from "lucide-react";
 import FeatureNavbar from "./components/FeatureNavbar";
-import Card from "./components/ui/Card";
-import Button from "./components/ui/Button";
 
-const featureItems = [
+const tools = [
   {
+    number: "01",
+    eyebrow: "MONOCHROME STUDIO",
+    title: "Grayscale,\nwith feeling.",
+    description: "Turn ordinary photographs into considered black-and-white images. Tune intensity, contrast, brightness and film grain, then compare every detail before export.",
     href: "/grayscale",
-    title: "Grayscale",
-    desc: "Convert photos to clean black and white with tonal precision.",
-    cta: "Convert Image",
-    badge: "Fast"
+    action: "Open grayscale studio",
+    icon: ImageIcon,
+    tag: "TONAL CONTROL",
+    className: "tool-tile--mono"
   },
   {
-    href: "/editor",
-    title: "Photo Editor",
-    desc: "Advanced editing for light, color, geometry, and details.",
-    cta: "Open Editor",
-    badge: "Most Powerful"
-  },
-  {
-    href: "/color-transfer",
-    title: "Color Grade Transfer",
-    desc: "Borrow cinematic looks from one image and apply them to another.",
-    cta: "Transfer Grade",
-    badge: "3D LUT"
+    number: "02",
+    eyebrow: "CINEMATIC COLOUR",
+    title: "One look.\nA whole new mood.",
+    description: "Borrow the colour character of a reference image and apply it to another photo with an adjustable 3D LUT workflow—all in your browser.",
+    href: "/color-grade-lut",
+    action: "Open colour grade studio",
+    icon: Palette,
+    tag: "3D LUT TRANSFER",
+    className: "tool-tile--grade"
   }
 ];
 
-const trustItems = ["No uploads", "No servers", "No tracking", "Browser processing"];
+const principles = [
+  { icon: ShieldCheck, title: "Private by default", text: "Your images stay on your device. Processing happens in the browser." },
+  { icon: Layers3, title: "Built for comparison", text: "Adjust the result and compare it with the original as you work." },
+  { icon: Fingerprint, title: "No account required", text: "Open a tool, bring an image, and get straight to the work." }
+];
 
-export default function HomePage() {
+
+function ArtworkPreview() {
   return (
-    <main className="page-shell">
-      <FeatureNavbar
-        links={[
-          { href: "/grayscale", label: "Grayscale" },
-          { href: "/editor", label: "Photo Editor" },
-          { href: "/color-transfer", label: "Color Grade" }
-        ]}
-      />
+    <div className="hero-artwork" aria-label="Preview of GrayGlyph's image tools">
+      <div className="artwork-red-block" />
+      <div className="artwork-index">GG / 026 <span>IMAGE WORKFLOW</span></div>
+      <div className="artwork-photo artwork-photo--colour">
+        <Image fill unoptimized priority sizes="(max-width: 768px) 70vw, 520px" src="/assets/sample-image.png" alt="Portrait photo in colour" />
+        <span className="artwork-label">ORIGINAL / RGB</span>
+      </div>
+      <div className="artwork-photo artwork-photo--mono">
+        <Image fill unoptimized sizes="(max-width: 768px) 58vw, 420px" src="/assets/sample-image.png" alt="The same portrait shown in black and white" />
+        <span className="artwork-label">STUDY / B&amp;W</span>
+      </div>
+      <div className="artwork-stamp"><Sparkles size={16} strokeWidth={1.8} /><span>YOUR IMAGE.<br />YOUR VISION.</span></div>
+      <div className="artwork-caption"><span>FIG. 01</span><span>IMAGE TRANSFORMATION, REIMAGINED.</span></div>
+    </div>
+  );
+}
 
-      <section className="section-gap grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-center">
-        <div className="animate-rise space-y-7">
-          <p className="hero-kicker">Cinematic Browser Workspace</p>
-          <h1 className="max-w-4xl">Master Your Images. Instantly. In Your Browser.</h1>
-          <p className="max-w-2xl text-base md:text-lg">
-            Professional grayscale, photo editing, and color grade transfer - 100% private, no uploads.
-          </p>
-          <div className="flex flex-wrap items-center gap-3 pt-2">
-            <Button href="/editor" className="px-6 py-3 text-sm md:text-base" aria-label="Start editing images">
-              Start Editing
-            </Button>
-            <Button href="/grayscale" variant="ghost" className="text-sm md:text-base" aria-label="Open grayscale converter">
-              Convert to Grayscale
-            </Button>
-            <Button href="/color-transfer" variant="ghost" className="text-sm md:text-base" aria-label="Open color grade transfer tool">
-              Transfer Color Grade
-            </Button>
+export default function HomeClient() {
+  return (
+    <main className="editorial-shell home-page">
+      <FeatureNavbar />
+
+      <section className="home-hero">
+        <div className="home-hero-copy">
+          <p className="eyebrow"><span className="eyebrow-dot" /> PRIVACY-FIRST IMAGE TOOLS</p>
+          <h1>MAKE IT<br />MONOCHROME<span className="red-star">✳</span><br /><span className="hero-last-line">MAKE IT <span className="red-word">CINEMATIC.</span></span></h1>
+          <p className="home-hero-description">Two focused tools for the way an image feels. Shape timeless black and white, or move colour from one photograph to another.</p>
+          <div className="hero-actions">
+            <Link href="/grayscale" className="button-red">START WITH GRAYSCALE <ArrowUpRight size={17} /></Link>
+            <Link href="/color-grade-lut" className="text-link">EXPLORE COLOUR GRADE <MoveUpRight size={16} /></Link>
           </div>
+          <div className="hero-meta"><span>01 / TWO PURPOSE-BUILT TOOLS</span><span>PROCESS LOCALLY · EXPORT FREELY</span></div>
         </div>
-
-        <aside className="glass-panel animate-rise relative overflow-hidden p-6 md:p-8">
-          <div className="relative rounded-3xl border border-[var(--border-primary)] bg-[var(--surface-overlay)] p-4 md:p-5">
-            <div className="mb-3 flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">Workspace Preview</span>
-              <span className="status-chip">Private</span>
-            </div>
-            <div className="canvas-frame min-h-[300px] overflow-hidden p-4">
-              <div className="rounded-2xl border border-[var(--border-primary)] bg-[var(--surface-overlay)] p-3 shadow-soft">
-                <div className="flex items-center justify-between text-[11px] text-muted">
-                  <span>GrayGlyph Workspace</span>
-                  <span>Live Preview</span>
-                </div>
-                <div className="mt-3 grid gap-3 sm:grid-cols-[0.9fr_1.1fr]">
-                  <div className="rounded-xl border border-[var(--border-primary)] bg-[var(--surface-glass)] p-3">
-                    <p className="text-xs font-medium text-ink-soft">Controls</p>
-                    <div className="mt-3 space-y-2">
-                      <span className="block h-2 w-full rounded-full bg-[var(--border-primary)]" />
-                      <span className="block h-2 w-5/6 rounded-full bg-[var(--border-primary)]" />
-                      <span className="block h-2 w-2/3 rounded-full bg-[var(--border-primary)]" />
-                    </div>
-                  </div>
-                  <div className="rounded-xl border border-[var(--border-primary)] bg-[var(--surface-glass)] p-3">
-                    <p className="text-xs font-medium text-[var(--text-primary)]">Before / After</p>
-                    <div className="mt-3 h-24 rounded-md bg-[var(--bg-tertiary)] shadow-inner" />
-                  </div>
-                </div>
-                <p className="mt-3 text-xs text-muted">Upload. Edit. Export.</p>
-              </div>
-            </div>
-          </div>
-        </aside>
+        <ArtworkPreview />
       </section>
 
-      <section className="section-gap">
-        <div className="grid gap-6 lg:grid-cols-3">
-          {featureItems.map((item, idx) => (
-            <Card
-              key={item.title}
-              as="a"
-              href={item.href}
-              variant="none"
-              className="feature-card group h-full"
-              style={{ animationDelay: `${idx * 70}ms` }}
-            >
-              <div className="flex h-full flex-col">
-                <div className="flex items-start justify-between gap-3">
-                  <span className="feature-card-icon">
-                    <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current" aria-hidden="true">
-                      <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z" />
-                    </svg>
-                  </span>
-                  <span className="feature-card-badge">{item.badge}</span>
+      <section className="stats-strip" aria-label="GrayGlyph principles">
+        <div><strong>02</strong><span>FOCUSED TOOLS</span></div>
+        <div><strong>100<span>%</span></strong><span>BROWSER-BASED</span></div>
+        <div><strong>0</strong><span>IMAGE UPLOADS</span></div>
+        <div className="stats-strip-note"><span>LESS INTERFACE.</span><span>MORE INTENTION.</span></div>
+      </section>
+
+      <section className="tools-section" id="tools">
+        <div className="section-heading-row">
+          <div><p className="eyebrow">THE TOOLKIT / 02</p><h2>Make every pixel<br /><span>earn its place.</span></h2></div>
+          <p className="section-heading-note">No bloated suite. No cluttered workspace. Just the tools you came for.</p>
+        </div>
+        <div className="tool-tiles">
+          {tools.map((tool) => {
+            const Icon = tool.icon;
+            return (
+              <article className={`tool-tile ${tool.className}`} key={tool.number}>
+                <div className="tool-tile-top"><span>{tool.number} / {tool.eyebrow}</span><span className="tool-tile-icon"><Icon size={19} strokeWidth={1.7} /></span></div>
+                <div className="tile-visual" aria-hidden="true">
+                  {tool.number === "01" ? (
+                    <div className="mono-visual"><Image fill unoptimized sizes="(max-width: 768px) 70vw, 480px" src="/assets/sample-image.png" alt="" /><span className="mono-visual-half" /><span className="visual-divider" /><span className="visual-badge">B&amp;W / 100%</span></div>
+                  ) : (
+                    <div className="grade-visual"><div className="grade-swatch grade-swatch--one" /><div className="grade-swatch grade-swatch--two" /><div className="grade-swatch grade-swatch--three" /><div className="grade-swatch grade-swatch--four" /><div className="grade-visual-caption">COLOUR<br />IS A LANGUAGE<span>↗</span></div></div>
+                  )}
                 </div>
-                <h3 className="feature-card-title mt-4">{item.title}</h3>
-                <p className="feature-card-desc mt-3 text-sm">{item.desc}</p>
-                <span className="feature-card-cta pointer-events-none mt-6">{item.cta}</span>
-              </div>
-            </Card>
-          ))}
+                <p className="tile-tag">{tool.tag}</p>
+                <h3>{tool.title.split("\n").map((line) => <span key={line}>{line}<br /></span>)}</h3>
+                <p className="tool-tile-description">{tool.description}</p>
+                <Link href={tool.href} className="tile-action">{tool.action}<CircleArrowRight size={23} strokeWidth={1.5} /></Link>
+              </article>
+            );
+          })}
         </div>
       </section>
 
-      <section className="section-gap">
-        <div className="glass-panel p-7 md:p-9">
-          <h2>Private by Design</h2>
-          <p className="mt-3 text-sm md:text-base">All processing happens right in your browser. No uploads. No tracking.</p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            {trustItems.map((item) => (
-              <div key={item} className="chip-row">
-                <span className="chip-icon">
-                  <svg viewBox="0 0 20 20" className="h-3.5 w-3.5 fill-current" aria-hidden="true">
-                    <path d="M7.7 14.3 3.9 10.5l1.2-1.2 2.6 2.6 7.2-7.2 1.2 1.2-8.4 8.4z" />
-                  </svg>
-                </span>
-                <span>{item}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+      <section className="privacy-section">
+        <div className="privacy-mark"><ShieldCheck size={27} strokeWidth={1.5} /><span>BUILT AROUND<br />YOUR PRIVACY</span></div>
+        <div className="privacy-copy"><p className="eyebrow">YOUR FILES STAY YOURS</p><h2>Private by design.<br /><span>Not by promise.</span></h2><p>GrayGlyph processes images on your device. Your source images are not sent to a server just to use the tools. You stay in control from first preview to final export.</p></div>
+        <div className="privacy-list">{principles.map(({ icon: Icon, title, text }, index) => <div className="privacy-item" key={title}><span className="privacy-item-number">0{index + 1}</span><span className="privacy-item-icon"><Icon size={19} /></span><div><h3>{title}</h3><p>{text}</p></div><Check size={17} className="privacy-check" /></div>)}</div>
       </section>
+
+      <section className="closing-cta"><div><p className="eyebrow">YOUR NEXT IMAGE STARTS HERE</p><h2>SEE IT<br />DIFFERENTLY<span>.</span></h2></div><Link href="/grayscale" className="closing-cta-link">LET&apos;S MAKE SOMETHING<br />OUT OF THE ORDINARY <ArrowDownRight size={28} /></Link><div className="closing-cta-index">GRAYGLYPH / IMAGE TOOLS / 2026</div></section>
     </main>
   );
 }

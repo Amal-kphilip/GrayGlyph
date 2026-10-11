@@ -2,7 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import FeatureNavbar from "../components/FeatureNavbar";
+import FeatureHero from "../components/FeatureHero";
 import DownloadButton from "../components/ui/DownloadButton";
+import { processGrayscalePixels } from "../../lib/grayscale-core.mjs";
+import { validateImageDimensions, validateImageFile } from "../../lib/image-validation.mjs";
+import { getDownloadFormat } from "../../lib/export-format.mjs";
 
 const DESKTOP_PREVIEW_WIDTH = 960;
 const DESKTOP_PREVIEW_HEIGHT = 540;
@@ -68,29 +72,6 @@ function getSliderBackground(value, min, max) {
 function getExtension(name) {
   const match = name.match(/\.([a-zA-Z0-9]+)$/);
   return match ? match[1].toLowerCase() : "";
-}
-
-function getDownloadFormat(mime, extension) {
-  const supported = new Set(["image/png", "image/jpeg", "image/webp"]);
-  let finalMime = mime;
-
-  if (!supported.has(finalMime)) {
-    if (extension === "jpg" || extension === "jpeg") {
-      finalMime = "image/jpeg";
-    } else if (extension === "webp") {
-      finalMime = "image/webp";
-    } else {
-      finalMime = "image/png";
-    }
-  }
-
-  let finalExtension = extension;
-  if (!finalExtension) {
-    finalExtension =
-      finalMime === "image/jpeg" ? "jpg" : finalMime === "image/webp" ? "webp" : "png";
-  }
-
-  return { mime: finalMime, extension: finalExtension };
 }
 
 function getCanvasThemeColors() {
@@ -324,68 +305,25 @@ export default function GrayscaleClient() {
     drawPreviewLabels(compareCtx, splitX, previewWidth);
   }, [drawPreviewLabels]);
 
+  // Live adjustments intentionally process the bounded preview canvas only.
+  // Full-resolution pixel work is deferred until the user exports the image.
   const applyFilters = useCallback(() => {
-    const fullCanvas = fullCanvasRef.current;
-    const fullOutputCanvas = fullOutputCanvasRef.current;
+    const sourceCanvas = sourceCanvasRef.current;
     const outputCanvas = outputCanvasRef.current;
-    if (!fullCanvas || !fullOutputCanvas || !outputCanvas) {
+    if (!sourceCanvas || !outputCanvas) {
       return;
     }
 
-    const fullCtx = fullCanvas.getContext("2d", { willReadFrequently: true });
-    const fullOutputCtx = fullOutputCanvas.getContext("2d", { willReadFrequently: true });
+    const sourceCtx = sourceCanvas.getContext("2d", { willReadFrequently: true });
     const outputCtx = outputCanvas.getContext("2d");
-
-    if (!fullCtx || !fullOutputCtx || !outputCtx) {
+    if (!sourceCtx || !outputCtx) {
       return;
     }
 
-    const { originalWidth, originalHeight, previewWidth, previewHeight } = stateRef.current;
-    const imageData = fullCtx.getImageData(0, 0, originalWidth, originalHeight);
-    const data = imageData.data;
-
-    const { intensity, contrast, brightness, grain, weights } = controlsRef.current;
-    const intensityValue = Number(intensity) / 100;
-    const contrastValue = Number(contrast);
-    const brightnessValue = Number(brightness);
-    const grainValue = Number(grain);
-
-    const factor = (259 * (contrastValue + 255)) / (255 * (259 - contrastValue));
-    const grainStrength = grainValue * 0.6;
-
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i];
-      const g = data[i + 1];
-      const b = data[i + 2];
-
-      const lum = weights ? 0.2126 * r + 0.7152 * g + 0.0722 * b : (r + g + b) / 3;
-      const mix = 1 - intensityValue;
-
-      let nr = r * mix + lum * intensityValue;
-      let ng = g * mix + lum * intensityValue;
-      let nb = b * mix + lum * intensityValue;
-
-      nr = factor * (nr - 128) + 128 + brightnessValue;
-      ng = factor * (ng - 128) + 128 + brightnessValue;
-      nb = factor * (nb - 128) + 128 + brightnessValue;
-
-      if (grainValue > 0) {
-        const noise = (Math.random() - 0.5) * grainStrength;
-        nr += noise;
-        ng += noise;
-        nb += noise;
-      }
-
-      data[i] = clamp(nr, 0, 255);
-      data[i + 1] = clamp(ng, 0, 255);
-      data[i + 2] = clamp(nb, 0, 255);
-    }
-
-    fullOutputCtx.putImageData(imageData, 0, 0);
-
-    outputCtx.clearRect(0, 0, previewWidth, previewHeight);
-    const rect = getContainRect(originalWidth, originalHeight, previewWidth, previewHeight);
-    outputCtx.drawImage(fullOutputCanvas, rect.x, rect.y, rect.width, rect.height);
+    const { previewWidth, previewHeight } = stateRef.current;
+    const imageData = sourceCtx.getImageData(0, 0, previewWidth, previewHeight);
+    processGrayscalePixels(imageData.data, controlsRef.current);
+    outputCtx.putImageData(imageData, 0, 0);
   }, []);
 
   const drawComparison = useCallback(() => {
@@ -518,12 +456,19 @@ export default function GrayscaleClient() {
 
       image.onload = () => {
         URL.revokeObjectURL(objectUrl);
-        applyImage(image, filename, labelPrefix, finalMimeType);
+        try {
+          validateImageDimensions(image.naturalWidth || image.width, image.naturalHeight || image.height);
+          applyImage(image, filename, labelPrefix, finalMimeType);
+        } catch (error) {
+          const previousImageNote = stateRef.current.image ? " The previous image remains loaded." : "";
+          setFileMeta(`${error.message || "This image cannot be processed."}${previousImageNote}`);
+        }
       };
 
       image.onerror = () => {
         URL.revokeObjectURL(objectUrl);
-        setFileMeta(`Failed to load image: ${filename}`);
+        const previousImageNote = stateRef.current.image ? " The previous image remains loaded." : "";
+        setFileMeta(`Could not decode ${filename}. Try PNG, JPEG, or WebP.${previousImageNote}`);
       };
 
       image.src = objectUrl;
@@ -538,6 +483,13 @@ export default function GrayscaleClient() {
       }
 
       const filename = file.name || "grayscale.png";
+      try {
+        validateImageFile(file);
+      } catch (error) {
+        const previousImageNote = stateRef.current.image ? " The previous image remains loaded." : "";
+        setFileMeta(`${error.message}${previousImageNote}`);
+        return;
+      }
       loadBlobImage(file, filename, filename, file.type);
     },
     [loadBlobImage]
@@ -570,26 +522,84 @@ export default function GrayscaleClient() {
   }, []);
 
   const prepareDownloadBlob = useCallback(async () => {
-    if (!stateRef.current.image || !fullOutputCanvasRef.current) {
-      throw new Error("No processed image available");
+    const sourceCanvas = fullCanvasRef.current;
+    const fullOutputCanvas = fullOutputCanvasRef.current;
+    if (!stateRef.current.image || !sourceCanvas || !fullOutputCanvas) {
+      throw new Error("Load an image before exporting.");
     }
+
+    const { originalWidth, originalHeight } = stateRef.current;
+    const sourceCtx = sourceCanvas.getContext("2d", { willReadFrequently: true });
+    const outputCtx = fullOutputCanvas.getContext("2d");
+    if (!sourceCtx || !outputCtx) {
+      throw new Error("The image canvas is unavailable. Reload the image and try again.");
+    }
+
+    const imageData = sourceCtx.getImageData(0, 0, originalWidth, originalHeight);
+    const controlsSnapshot = {
+      intensity: controlsRef.current.intensity,
+      contrast: controlsRef.current.contrast,
+      brightness: controlsRef.current.brightness,
+      grain: controlsRef.current.grain,
+      weights: controlsRef.current.weights
+    };
+
+    // Transfer the pixel buffer to a Web Worker instead of blocking the UI
+    // thread with a full-resolution pixel loop.
+    const pixelsBuffer = await new Promise((resolve, reject) => {
+      let worker;
+      let timeoutId;
+      let settled = false;
+      const finish = (callback, value) => {
+        if (settled) return;
+        settled = true;
+        if (timeoutId) window.clearTimeout(timeoutId);
+        if (worker) worker.terminate();
+        callback(value);
+      };
+
+      try {
+        if (typeof Worker === "undefined") {
+          processGrayscalePixels(imageData.data, controlsSnapshot);
+          resolve(imageData.data.buffer);
+          return;
+        }
+
+        worker = new Worker("/workers/grayscale.worker.js");
+        worker.onmessage = (event) => {
+          if (event.data?.error) {
+            finish(reject, new Error(event.data.error));
+          } else if (event.data?.buffer instanceof ArrayBuffer) {
+            finish(resolve, event.data.buffer);
+          } else {
+            finish(reject, new Error("Image processing returned an invalid result."));
+          }
+        };
+        worker.onerror = () => finish(reject, new Error("Image processing failed in the background worker. Please retry the export."));
+        timeoutId = window.setTimeout(() => finish(reject, new Error("Image processing timed out. Try a smaller image.")), 90_000);
+        worker.postMessage({ buffer: imageData.data.buffer, controls: controlsSnapshot }, [imageData.data.buffer]);
+      } catch (error) {
+        finish(reject, error instanceof Error ? error : new Error("Could not start image processing."));
+      }
+    });
+
+    outputCtx.putImageData(
+      new ImageData(new Uint8ClampedArray(pixelsBuffer), originalWidth, originalHeight),
+      0,
+      0
+    );
 
     const baseName = stateRef.current.filename.replace(/\.[^/.]+$/, "");
     const { mime, extension } = getDownloadFormat(stateRef.current.mime, stateRef.current.extension);
     const quality = mime === "image/jpeg" || mime === "image/webp" ? 0.92 : undefined;
-
-    const blob = await new Promise((resolve) => {
-      fullOutputCanvasRef.current.toBlob((nextBlob) => resolve(nextBlob), mime, quality);
+    const blob = await new Promise((resolve, reject) => {
+      fullOutputCanvas.toBlob((nextBlob) => {
+        if (nextBlob) resolve(nextBlob);
+        else reject(new Error("The browser could not encode this image. Try PNG or a smaller file."));
+      }, mime, quality);
     });
 
-    if (!blob) {
-      throw new Error("Grayscale blob generation failed");
-    }
-
-    return {
-      blob,
-      filename: `${baseName}-grayscale.${extension}`
-    };
+    return { blob, filename: `${baseName}-grayscale.${extension}` };
   }, []);
 
   useEffect(() => {
@@ -658,32 +668,24 @@ export default function GrayscaleClient() {
   const splitDisplay = useMemo(() => split, [split]);
 
   return (
-    <main className="page-shell">
-      <FeatureNavbar
-        links={[
-          { href: "/", label: "Home" },
-          { href: "/editor", label: "Photo Editor" },
-          { href: "/color-transfer", label: "Color Grade" }
-        ]}
-      />
+    <main className="page-shell tool-page-shell tool-page-shell--grayscale">
+      <FeatureNavbar />
 
-      <section className="section-gap glass-panel animate-rise p-7 md:p-9">
-        <p className="hero-kicker">
-          Dedicated Grayscale Converter
-        </p>
-        <h1 className="mt-5 max-w-4xl">Convert To Grayscale In Seconds. Stay 100% Private.</h1>
-        <p className="mt-4 max-w-3xl text-base md:text-lg">
-          Adjust grayscale intensity, contrast, brightness, and grain with live split preview. All image processing stays in your browser.
-        </p>
+      <section className="section-gap">
+        <FeatureHero
+          label="MONOCHROME STUDIO / 01"
+          title="Make it black. Make it white. Make it yours."
+          description="Build a considered black-and-white image with precise tonal controls, a live before-and-after comparison, and browser-only export."
+        />
       </section>
 
       <section
         id="grayscale-tool"
-        className="section-gap"
+        className="section-gap tool-workspace tool-workspace--grayscale"
         aria-label="Grayscale converter tool"
       >
-        <div className="grid gap-6 md:gap-8 lg:grid-cols-[390px_minmax(0,1fr)] lg:items-start">
-          <section className="glass-panel animate-rise p-6">
+        <div className="grid grayscale-workspace-grid gap-6 md:gap-8 lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start">
+          <section className="glass-panel grayscale-control-panel animate-rise p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-3xl">Grayscale Tool</h2>
@@ -712,8 +714,9 @@ export default function GrayscaleClient() {
               }}
             />
 
-            <div className="mt-5 hidden rounded-2xl border border-[var(--border-primary)] bg-[var(--surface-glass)] px-4 py-3 lg:block">
-              <p className="text-sm text-muted">{fileMeta}</p>
+            <div className="mt-5 rounded-2xl border border-[var(--border-primary)] bg-[var(--surface-glass)] px-4 py-3">
+              <p className="text-sm text-muted" role="status" aria-live="polite">{fileMeta}</p>
+              <p className="mt-1 text-xs text-muted">Up to 40 MB and 20 megapixels per image.</p>
               <div className="mt-3 flex flex-wrap gap-2.5">
                 <DownloadButton
                   onGenerateBlob={prepareDownloadBlob}
@@ -831,7 +834,7 @@ export default function GrayscaleClient() {
             )}
           </section>
 
-          <section className="glass-panel animate-rise p-6">
+          <section className="glass-panel grayscale-preview-panel animate-rise p-6">
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-3xl">Preview</h2>
@@ -867,7 +870,7 @@ export default function GrayscaleClient() {
                   const [file] = event.dataTransfer.files || [];
                   loadFile(file);
                 }}
-                className={`grid min-h-[460px] place-items-center rounded-3xl border border-dashed p-8 text-center transition ${isDragOver
+                className={`grayscale-empty-state grid min-h-[460px] place-items-center rounded-3xl border border-dashed p-8 text-center transition ${isDragOver
                   ? "dropzone-active"
                   : "border-[var(--border-primary)] bg-[var(--surface-glass)]"
                   }`}

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import FeatureNavbar from "../components/FeatureNavbar";
 import FeatureHero from "../components/FeatureHero";
+import { validateImageDimensions, validateImageFile } from "../../lib/image-validation.mjs";
 
 const DESKTOP_MAX_WIDTH = 960;
 const DESKTOP_MAX_HEIGHT = 540;
@@ -416,6 +417,50 @@ export function apply3DLUT(targetPixels, lut, intensity, output) {
   return out;
 }
 
+function processFullResolutionInWorker(pixelBuffer, lutValues, intensity, lutSize) {
+  const transferableLut = new Float32Array(lutValues);
+
+  if (typeof Worker === "undefined") {
+    const pixels = new Uint8ClampedArray(pixelBuffer);
+    transferableLut.size = lutSize;
+    return Promise.resolve(apply3DLUT(pixels, transferableLut, intensity).buffer);
+  }
+
+  return new Promise((resolve, reject) => {
+    let worker;
+    let timeoutId;
+    let settled = false;
+    const finish = (callback, value) => {
+      if (settled) return;
+      settled = true;
+      if (timeoutId) window.clearTimeout(timeoutId);
+      if (worker) worker.terminate();
+      callback(value);
+    };
+
+    try {
+      worker = new Worker("/workers/color-grade.worker.js");
+      worker.onmessage = (event) => {
+        if (event.data?.error) {
+          finish(reject, new Error(event.data.error));
+        } else if (event.data?.buffer instanceof ArrayBuffer) {
+          finish(resolve, event.data.buffer);
+        } else {
+          finish(reject, new Error("Color grading returned an invalid result."));
+        }
+      };
+      worker.onerror = () => finish(reject, new Error("Color grading failed in the background worker. Please retry the export."));
+      timeoutId = window.setTimeout(() => finish(reject, new Error("Color grading timed out. Try a smaller image.")), 90_000);
+      worker.postMessage(
+        { pixelBuffer, lutBuffer: transferableLut.buffer, intensity, lutSize },
+        [pixelBuffer, transferableLut.buffer]
+      );
+    } catch (error) {
+      finish(reject, error instanceof Error ? error : new Error("Could not start color grading."));
+    }
+  });
+}
+
 export default function ColorGradeLutPage() {
   const sourceInputRef = useRef(null);
   const targetInputRef = useRef(null);
@@ -485,7 +530,8 @@ export default function ColorGradeLutPage() {
     }
 
     ctx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
-    ctx.drawImage(targetImage, 0, 0, targetCanvas.width, targetCanvas.height);
+    const rect = getContainRect(targetImage.width, targetImage.height, targetCanvas.width, targetCanvas.height);
+    ctx.drawImage(targetImage, rect.x, rect.y, rect.width, rect.height);
 
     const imageData = ctx.getImageData(0, 0, targetCanvas.width, targetCanvas.height);
     targetPixelsRef.current = imageData.data;
@@ -651,26 +697,34 @@ export default function ColorGradeLutPage() {
 
   const loadImageFromFile = useCallback((file) => {
     return new Promise((resolve, reject) => {
-      if (!file) {
-        reject(new Error("No file provided"));
+      try {
+        validateImageFile(file);
+      } catch (error) {
+        reject(error);
         return;
       }
 
       const image = new Image();
-      image.crossOrigin = "anonymous";
       image.decoding = "async";
       const objectUrl = URL.createObjectURL(file);
+      let settled = false;
+      const finish = (callback, value) => {
+        if (settled) return;
+        settled = true;
+        URL.revokeObjectURL(objectUrl);
+        callback(value);
+      };
 
       image.onload = () => {
-        URL.revokeObjectURL(objectUrl);
-        resolve(image);
+        try {
+          validateImageDimensions(image.naturalWidth || image.width, image.naturalHeight || image.height);
+          finish(resolve, image);
+        } catch (error) {
+          finish(reject, error);
+        }
       };
 
-      image.onerror = (error) => {
-        URL.revokeObjectURL(objectUrl);
-        reject(error);
-      };
-
+      image.onerror = () => finish(reject, new Error("Could not decode this image. Try PNG, JPEG, or WebP."));
       image.src = objectUrl;
     });
   }, []);
@@ -692,9 +746,9 @@ export default function ColorGradeLutPage() {
       setSourcePreviewTick((tick) => tick + 1);
       setStatusText("LUT not built yet");
     } catch (error) {
-      setSourceMeta("Failed to load source image");
-      setStatusText("LUT not built yet");
-      console.error("Source image load failed", error);
+      const message = error instanceof Error ? error.message : "Failed to load source image";
+      setSourceMeta(`${message}${sourceImageRef.current ? " Previous source image remains loaded." : ""}`);
+      setStatusText(sourceImageRef.current ? "Existing source retained" : "Source image not loaded");
     } finally {
       setIsProcessing(false);
     }
@@ -737,9 +791,9 @@ export default function ColorGradeLutPage() {
         }
       });
     } catch (error) {
-      setTargetMeta("Failed to load target image");
-      setStatusText("LUT not built yet");
-      console.error("Target image load failed", error);
+      const message = error instanceof Error ? error.message : "Failed to load target image";
+      setTargetMeta(`${message}${targetImageRef.current ? " Previous target image remains loaded." : ""}`);
+      setStatusText(targetImageRef.current ? "Existing target retained" : "Target image not loaded");
     } finally {
       setIsProcessing(false);
     }
@@ -751,16 +805,15 @@ export default function ColorGradeLutPage() {
     }
 
     setIsProcessing(true);
-    setStatusText("Preparing download...");
+    setStatusText("Preparing download in background...");
 
-    requestAnimationFrame(() => {
+    requestAnimationFrame(async () => {
       try {
         const targetImage = targetImageRef.current;
         const fullTargetCanvas = fullTargetCanvasRef.current;
         const fullOutputCanvas = fullOutputCanvasRef.current;
-
         if (!fullTargetCanvas || !fullOutputCanvas) {
-          return;
+          throw new Error("The export canvas is unavailable. Reload the target image and try again.");
         }
 
         fullTargetCanvas.width = targetImage.width;
@@ -769,21 +822,23 @@ export default function ColorGradeLutPage() {
         fullOutputCanvas.height = targetImage.height;
 
         const fullCtx = fullTargetCanvas.getContext("2d", { willReadFrequently: true });
-        const outCtx = fullOutputCanvas.getContext("2d", { willReadFrequently: true });
-
+        const outCtx = fullOutputCanvas.getContext("2d");
         if (!fullCtx || !outCtx) {
-          return;
+          throw new Error("The browser could not create an export canvas.");
         }
 
         fullCtx.clearRect(0, 0, fullTargetCanvas.width, fullTargetCanvas.height);
         fullCtx.drawImage(targetImage, 0, 0, fullTargetCanvas.width, fullTargetCanvas.height);
 
         const imageData = fullCtx.getImageData(0, 0, fullTargetCanvas.width, fullTargetCanvas.height);
-        const output = new Uint8ClampedArray(imageData.data.length);
-        apply3DLUT(imageData.data, lutRef.current, intensity, output);
-
+        const resultBuffer = await processFullResolutionInWorker(
+          imageData.data.buffer,
+          lutRef.current,
+          intensity,
+          lutRef.current.size || LUT_SIZE
+        );
         outCtx.putImageData(
-          new ImageData(output, fullOutputCanvas.width, fullOutputCanvas.height),
+          new ImageData(new Uint8ClampedArray(resultBuffer), fullOutputCanvas.width, fullOutputCanvas.height),
           0,
           0
         );
@@ -791,7 +846,6 @@ export default function ColorGradeLutPage() {
         const filename = targetFilenameRef.current || "target";
         const baseName = filename.replace(/\.[^/.]+$/, "");
         const normalized = (extension || "png").toLowerCase();
-
         let mime = "image/png";
         let outputExtension = "png";
 
@@ -803,15 +857,26 @@ export default function ColorGradeLutPage() {
           outputExtension = "webp";
         }
 
-        const link = document.createElement("a");
-        link.download = `${baseName}-graded.${outputExtension}`;
         const quality = mime === "image/jpeg" || mime === "image/webp" ? 0.95 : undefined;
-        link.href = fullOutputCanvas.toDataURL(mime, quality);
+        const blob = await new Promise((resolve, reject) => {
+          fullOutputCanvas.toBlob((nextBlob) => {
+            if (nextBlob) resolve(nextBlob);
+            else reject(new Error("The browser could not encode this image. Try PNG or a smaller file."));
+          }, mime, quality);
+        });
+
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = objectUrl;
+        link.download = `${baseName}-graded.${outputExtension}`;
+        link.rel = "noopener";
+        document.body.appendChild(link);
         link.click();
-        setStatusText("LUT ready");
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+        setStatusText("LUT ready · Download started");
       } catch (error) {
-        console.error("Download failed", error);
-        setStatusText("Download failed");
+        setStatusText(error instanceof Error ? error.message : "Download failed. Please retry.");
       } finally {
         setIsProcessing(false);
       }
@@ -925,13 +990,8 @@ export default function ColorGradeLutPage() {
   const intensityDisplay = intensity;
 
   return (
-    <main className="page-shell">
-      <FeatureNavbar
-        links={[
-          { href: "/grayscale", label: "Grayscale" },
-          { href: "/editor", label: "Photo Editor" }
-        ]}
-      />
+    <main className="page-shell tool-page-shell tool-page-shell--color-grade">
+      <FeatureNavbar />
 
       <section className="section-gap">
         <FeatureHero
@@ -943,13 +1003,14 @@ export default function ColorGradeLutPage() {
         />
       </section>
 
-      <section id="transfer-workspace" className="section-gap">
-        <div className="glass-panel animate-rise p-5 md:p-6">
+      <section id="transfer-workspace" className="section-gap tool-workspace tool-workspace--color-grade">
+        <div className="glass-panel color-grade-workspace animate-rise p-5 md:p-6">
           <div className="grid gap-6 lg:grid-cols-[390px_minmax(0,1fr)] lg:items-start">
-            <div className="space-y-4">
+            <div className="space-y-4 color-grade-inputs">
               <div>
                 <h2 className="text-3xl">Inputs</h2>
                 <p className="text-sm text-muted">Add a color reference and target image to build and apply a LUT.</p>
+                <p className="mt-1 text-xs text-muted">Browser-only processing · Up to 40 MB and 20 megapixels per image.</p>
               </div>
 
               <input
@@ -978,7 +1039,7 @@ export default function ColorGradeLutPage() {
                   const [file] = event.dataTransfer.files || [];
                   handleSourceFile(file);
                 }}
-                className={`grid min-h-40 w-full place-items-center rounded-3xl border border-dashed px-5 py-8 text-center transition ${isDragOverSource
+                className={`source-dropzone grid min-h-40 w-full place-items-center rounded-3xl border border-dashed px-5 py-8 text-center transition ${isDragOverSource
                   ? "dropzone-active"
                   : "border-[var(--border-primary)] bg-[var(--surface-glass)] hover:bg-[var(--surface-overlay)]"
                   }`}
@@ -989,7 +1050,7 @@ export default function ColorGradeLutPage() {
                 </div>
               </button>
 
-              <p className="text-xs text-muted">{sourceMeta}</p>
+              <p className="text-xs text-muted" role="status" aria-live="polite">{sourceMeta}</p>
               {sourceImageRef.current && (
                 <canvas
                   ref={sourcePreviewCanvasRef}
@@ -1024,7 +1085,7 @@ export default function ColorGradeLutPage() {
                   const [file] = event.dataTransfer.files || [];
                   handleTargetFile(file);
                 }}
-                className={`grid min-h-40 w-full place-items-center rounded-3xl border border-dashed px-5 py-8 text-center transition ${isDragOverTarget
+                className={`target-dropzone grid min-h-40 w-full place-items-center rounded-3xl border border-dashed px-5 py-8 text-center transition ${isDragOverTarget
                   ? "dropzone-active"
                   : "border-[var(--border-primary)] bg-[var(--surface-glass)] hover:bg-[var(--surface-overlay)]"
                   }`}
@@ -1035,11 +1096,11 @@ export default function ColorGradeLutPage() {
                 </div>
               </button>
 
-              <p className="text-xs text-muted">{targetMeta}</p>
+              <p className="text-xs text-muted" role="status" aria-live="polite">{targetMeta}</p>
             </div>
 
-            <div className="space-y-4">
-              <section className="rounded-3xl border border-[var(--border-primary)] bg-[var(--surface-glass)] p-4 backdrop-blur-xl">
+            <div className="space-y-4 color-grade-output">
+              <section className="color-grade-preview rounded-3xl border border-[var(--border-primary)] bg-[var(--surface-glass)] p-4 backdrop-blur-xl">
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <h2 className="text-3xl">Live Preview</h2>
@@ -1082,7 +1143,7 @@ export default function ColorGradeLutPage() {
                 </div>
               </section>
 
-              <section className="rounded-3xl border border-[var(--border-primary)] bg-[var(--surface-glass)] p-4 backdrop-blur-xl">
+              <section className="color-grade-controls rounded-3xl border border-[var(--border-primary)] bg-[var(--surface-glass)] p-4 backdrop-blur-xl">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <h3 className="text-2xl">Controls</h3>

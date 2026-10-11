@@ -2,7 +2,7 @@ import InfoPageLayout from "../components/InfoPageLayout";
 
 export const metadata = {
   title: "FAQ",
-  description: "Frequently asked questions about GrayGlyph privacy, browser processing, and supported editing features."
+  description: "Frequently asked questions about GrayGlyph privacy, grayscale conversion, and color grade transfer."
 };
 
 const faqItems = [
@@ -11,16 +11,16 @@ const faqItems = [
     answer: "No. Images are processed locally in your browser and are not uploaded to GrayGlyph servers."
   },
   {
-    question: "Do I need an account to edit images?",
-    answer: "No account is required to use grayscale conversion, photo editing, or color transfer features."
+    question: "Do I need an account to use GrayGlyph?",
+    answer: "No account is required to use grayscale conversion or color grade transfer."
   },
   {
     question: "Can I compare before and after results?",
     answer: "Yes. GrayGlyph includes before/after comparison controls across supported workflows."
   },
   {
-    question: "Is editing destructive?",
-    answer: "No. GrayGlyph uses a non-destructive pipeline so original image data remains unchanged."
+    question: "Can I preserve my original image?",
+    answer: "Yes. Your source file is left untouched; you download the processed result as a separate file."
   }
 ];
 

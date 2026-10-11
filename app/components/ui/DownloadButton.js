@@ -104,14 +104,10 @@ export default function DownloadButton({
   const isDisabled = disabled || isBusy;
 
   const stateClasses = {
-    [STATUS_IDLE]:
-      "border-[rgba(148,163,184,0.45)] bg-[linear-gradient(130deg,rgba(30,41,59,0.64),rgba(15,23,42,0.76))] text-[var(--text-primary)] hover:border-indigo-300/50 hover:shadow-[0_0_0_1px_rgba(129,140,248,0.2),0_10px_24px_rgba(37,99,235,0.2)]",
-    [STATUS_LOADING]:
-      "cursor-not-allowed border-[rgba(148,163,184,0.38)] bg-[linear-gradient(130deg,rgba(30,41,59,0.6),rgba(15,23,42,0.72))] text-[var(--text-secondary)] opacity-85",
-    [STATUS_SUCCESS]:
-      "border-emerald-300/60 bg-[linear-gradient(130deg,rgba(16,185,129,0.28),rgba(5,46,22,0.82))] text-emerald-100 shadow-[0_0_0_1px_rgba(52,211,153,0.35),0_10px_28px_rgba(5,150,105,0.35)]",
-    [STATUS_ERROR]:
-      "border-rose-300/55 bg-[linear-gradient(130deg,rgba(239,68,68,0.22),rgba(69,10,10,0.82))] text-rose-100 shadow-[0_0_0_1px_rgba(251,113,133,0.28),0_10px_28px_rgba(127,29,29,0.4)]"
+    [STATUS_IDLE]: "border-[#d71920] bg-[#d71920] text-white hover:border-[#b9151b] hover:bg-[#b9151b]",
+    [STATUS_LOADING]: "cursor-wait border-[#d2d0cc] bg-[#ecebe8] text-[#555555]",
+    [STATUS_SUCCESS]: "border-[#b9d9c1] bg-[#edf7f0] text-[#20633a]",
+    [STATUS_ERROR]: "border-[#e5a8aa] bg-[#fff1f1] text-[#8f1016]"
   };
 
   const label = {
@@ -129,7 +125,7 @@ export default function DownloadButton({
       aria-busy={isBusy}
       aria-disabled={isDisabled}
       className={cn(
-        "inline-flex min-w-[10.5rem] items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold tracking-wide shadow-[0_8px_22px_rgba(2,6,23,0.38)] backdrop-blur-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300/70",
+        "inline-flex min-w-[10.5rem] items-center justify-center gap-2 rounded-[2px] border px-4 py-2 text-sm font-extrabold uppercase tracking-wide shadow-none transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d71920]/40",
         stateClasses[status],
         className
       )}

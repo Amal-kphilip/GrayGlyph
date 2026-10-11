@@ -14,7 +14,7 @@ export default function PrivacyPolicyPage() {
     >
       <div className="space-y-4 text-sm md:text-base">
         <p>
-          GrayGlyph does not require image uploads for core editing workflows. Processing is performed client-side in the browser using local resources.
+          GrayGlyph does not require image uploads for grayscale conversion or color grade transfer. Processing is performed client-side in your browser using local resources.
         </p>
         <p>
           We do not use image content for profiling or training. Any optional analytics should be limited to anonymous product usage signals.
